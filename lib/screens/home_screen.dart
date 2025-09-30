@@ -4,7 +4,9 @@ import 'dart:io';
 import '../models/diary_entry.dart';
 import '../services/diary_service.dart';
 import '../widgets/custom_app_bar.dart';
+import '../widgets/inspiration_tab.dart';
 import '../widgets/mood_card.dart';
+import '../widgets/mood_tab.dart';
 import '../widgets/weekly_activities.dart';
 import '../widgets/quick_actions.dart';
 import '../widgets/recent_entries.dart';
@@ -27,131 +29,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadRecentEntries();
   }
 
-  // Bottom navigation bar tıklama fonksiyonu
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    // Her sekme için farklı işlemler
-    switch (index) {
-      case 0:
-        // Günlük - zaten ana sayfa
-        break;
-      case 1:
-        // İlham - yeni sayfa aç
-        _showInspirationPage();
-        break;
-      case 2:
-        // Ruh Hali - ruh hali sayfası aç
-        _showMoodPage();
-        break;
-      case 3:
-        // Meditasyon - meditasyon sayfası aç
-        _showMeditationPage();
-        break;
-    }
-  }
-
-  // İlham sayfası
-  void _showInspirationPage() {
-    if (Platform.isIOS) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('İlham'),
-          content: const Text('İlham sayfası yakında gelecek!'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tamam'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('İlham'),
-          content: const Text('İlham sayfası yakında gelecek!'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tamam'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  // Ruh hali sayfası
-  void _showMoodPage() {
-    if (Platform.isIOS) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Ruh Hali'),
-          content: const Text('Ruh hali takibi yakında gelecek!'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tamam'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Ruh Hali'),
-          content: const Text('Ruh hali takibi yakında gelecek!'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tamam'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
-  // Meditasyon sayfası
-  void _showMeditationPage() {
-    if (Platform.isIOS) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Meditasyon'),
-          content: const Text('Meditasyon sayfası yakında gelecek!'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tamam'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: const Text('Meditasyon'),
-          content: const Text('Meditasyon sayfası yakında gelecek!'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tamam'),
-            ),
-          ],
-        ),
-      );
-    }
-  }
-
   Future<void> _loadRecentEntries() async {
     final entries = await DiaryService.getAllEntries();
     setState(() {
@@ -162,74 +39,194 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     if (Platform.isIOS) {
-      return CupertinoPageScaffold(
-        navigationBar: const CustomAppBar(),
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: _buildBody(),
-          ),
-        ),
-      );
+      return _buildCupertinoLayout();
     } else {
-      return Scaffold(
-        appBar: const CustomAppBar(),
-        body: SafeArea(
-          child: RefreshIndicator(
-            onRefresh: _loadRecentEntries,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.all(16),
-              child: _buildBody(),
-            ),
-          ),
-        ),
-        floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const AddEntryScreen()),
-            ).then((_) => _loadRecentEntries());
-          },
-          icon: const Icon(Icons.add),
-          label: const Text('Yeni Giriş'),
-        ),
-        bottomNavigationBar: BottomNavigationBar(
-          type: BottomNavigationBarType.fixed,
-          currentIndex: _selectedIndex,
-          onTap: _onItemTapped,
-          selectedItemColor: Theme.of(context).colorScheme.primary,
-          unselectedItemColor: Theme.of(context).colorScheme.outline,
-          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.book_outlined),
-              activeIcon: Icon(Icons.book),
-              label: 'Günlük',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.lightbulb_outline),
-              activeIcon: Icon(Icons.lightbulb),
-              label: 'İlham',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.favorite_outline),
-              activeIcon: Icon(Icons.favorite),
-              label: 'Ruh Hali',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.self_improvement_outlined),
-              activeIcon: Icon(Icons.self_improvement),
-              label: 'Meditasyon',
-            ),
-          ],
-        ),
-      );
+      return _buildMaterialLayout();
     }
   }
 
+  Widget _buildMaterialLayout() {
+    return Scaffold(
+      appBar: const CustomAppBar(),
+      body: SafeArea(child: _buildMaterialBody()),
+      floatingActionButton: _selectedIndex == 0
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const AddEntryScreen(),
+                  ),
+                ).then((_) => _loadRecentEntries());
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Yeni Giriş'),
+            )
+          : null,
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        selectedItemColor: Theme.of(context).colorScheme.primary,
+        unselectedItemColor: Theme.of(context).colorScheme.outline,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        items: [
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              'assets/images/bulb.png',
+              width: 24,
+              height: 24,
+              color: Theme.of(context).colorScheme.outline,
+            ),
+            activeIcon: Image.asset(
+              'assets/images/bulb.png',
+              width: 24,
+              height: 24,
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            label: 'İlham',
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              'assets/icons/diary_outline.png',
+              width: 24,
+              height: 24,
+            ),
+            activeIcon: Image.asset(
+              'assets/icons/diary_filled.png',
+              width: 24,
+              height: 24,
+            ),
+            label: 'Günlük',
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              'assets/icons/mood_outline.png',
+              width: 24,
+              height: 24,
+            ),
+            activeIcon: Image.asset(
+              'assets/icons/mood_filled.png',
+              width: 24,
+              height: 24,
+            ),
+            label: 'Ruh Hali',
+          ),
+          BottomNavigationBarItem(
+            icon: Image.asset(
+              'assets/icons/meditation_outline.png',
+              width: 24,
+              height: 24,
+            ),
+            activeIcon: Image.asset(
+              'assets/icons/meditation_filled.png',
+              width: 24,
+              height: 24,
+            ),
+            label: 'Meditasyon',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMaterialBody() {
+    if (_selectedIndex == 0) {
+      return RefreshIndicator(
+        onRefresh: _loadRecentEntries,
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.all(16),
+          child: _buildDiaryContent(),
+        ),
+      );
+    }
+
+    if (_selectedIndex == 1) {
+      return const InspirationTab();
+    }
+
+    if (_selectedIndex == 2) {
+      return const MoodTab();
+    }
+
+    return _buildComingSoonContent(
+      title: _tabTitle(_selectedIndex),
+      description: _tabDescription(_selectedIndex),
+      icon: _materialPlaceholderIcon(_selectedIndex),
+    );
+  }
+
+  Widget _buildCupertinoLayout() {
+    return CupertinoTabScaffold(
+      tabBar: CupertinoTabBar(
+        currentIndex: _selectedIndex,
+        onTap: (index) => setState(() => _selectedIndex = index),
+        activeColor: const Color(0xFF6B46C1),
+        inactiveColor: CupertinoColors.inactiveGray,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.book),
+            activeIcon: Icon(CupertinoIcons.book_fill),
+            label: 'Günlük',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.lightbulb),
+            activeIcon: Icon(CupertinoIcons.lightbulb_fill),
+            label: 'İlham',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.heart),
+            activeIcon: Icon(CupertinoIcons.heart_fill),
+            label: 'Ruh Hali',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.sparkles),
+            activeIcon: Icon(CupertinoIcons.sparkles),
+            label: 'Meditasyon',
+          ),
+        ],
+      ),
+      tabBuilder: (context, index) {
+        if (index == 0) {
+          return CupertinoTabView(
+            builder: (context) => CupertinoPageScaffold(
+              navigationBar: const CustomAppBar(),
+              child: SafeArea(
+                bottom: false,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(16),
+                  child: _buildDiaryContent(),
+                ),
+              ),
+            ),
+          );
+        }
+
+        return CupertinoTabView(
+          builder: (context) => CupertinoPageScaffold(
+            navigationBar: const CustomAppBar(),
+            child: SafeArea(
+              bottom: false,
+              child: index == 1
+                  ? const InspirationTab(isCupertino: true)
+                  : index == 2
+                  ? const MoodTab(isCupertino: true)
+                  : _buildComingSoonContent(
+                      title: _tabTitle(index),
+                      description: _tabDescription(index),
+                      icon: _cupertinoPlaceholderIcon(index),
+                      isCupertino: true,
+                    ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   // Ana içerik widget'ı
-  Widget _buildBody() {
+  Widget _buildDiaryContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -252,5 +249,104 @@ class _HomeScreenState extends State<HomeScreen> {
         RecentEntries(entries: _recentEntries, onRefresh: _loadRecentEntries),
       ],
     );
+  }
+
+  Widget _buildComingSoonContent({
+    required String title,
+    required String description,
+    required IconData icon,
+    bool isCupertino = false,
+  }) {
+    final textStyle = isCupertino
+        ? const TextStyle(
+            fontSize: 16,
+            color: CupertinoColors.secondaryLabel,
+            height: 1.5,
+          )
+        : const TextStyle(fontSize: 16, color: Colors.black54, height: 1.5);
+
+    final titleStyle = isCupertino
+        ? const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: CupertinoColors.label,
+          )
+        : const TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w600,
+            color: Colors.black87,
+          );
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 56,
+              color: isCupertino ? CupertinoColors.activeBlue : Colors.black38,
+            ),
+            const SizedBox(height: 24),
+            Text(title, style: titleStyle, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            Text(description, style: textStyle, textAlign: TextAlign.center),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _tabTitle(int index) {
+    switch (index) {
+      case 1:
+        return 'İlham';
+      case 2:
+        return 'Ruh Hali';
+      case 3:
+        return 'Meditasyon';
+      default:
+        return 'Günlük';
+    }
+  }
+
+  String _tabDescription(int index) {
+    switch (index) {
+      case 1:
+        return 'İlham köşesi üzerinde çalışıyoruz. Yakında size ilham verecek içerikler burada olacak!';
+      case 2:
+        return 'Ruh hali takibi çok yakında devrede olacak. Günlük modunuzu kolayca kaydedebileceksiniz.';
+      case 3:
+        return 'Meditasyon deneyimi hazırlık aşamasında. Sakinleşmek için kısa egzersizler burada yer alacak!';
+      default:
+        return '';
+    }
+  }
+
+  IconData _materialPlaceholderIcon(int index) {
+    switch (index) {
+      case 1:
+        return Icons.lightbulb_outline;
+      case 2:
+        return Icons.favorite_outline;
+      case 3:
+        return Icons.self_improvement_outlined;
+      default:
+        return Icons.book_outlined;
+    }
+  }
+
+  IconData _cupertinoPlaceholderIcon(int index) {
+    switch (index) {
+      case 1:
+        return CupertinoIcons.lightbulb;
+      case 2:
+        return CupertinoIcons.heart;
+      case 3:
+        return CupertinoIcons.sparkles;
+      default:
+        return CupertinoIcons.book;
+    }
   }
 }
