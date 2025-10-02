@@ -26,8 +26,6 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0; // Seçili sekme indeksi
   List<String> _enabledWidgets = [
     'Günlük Hedef',
-    'Hızlı İstatistikler',
-    'Duygusal Özet',
     'Akıllı Öneriler',
     'Hızlı Erişim',
   ]; // Aktif widget'lar
@@ -96,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
         selectedItemColor: const Color(0xFF6B46C1),
         unselectedItemColor: Colors.grey,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        backgroundColor: Colors.white,
+        backgroundColor: const Color(0xFFF2F2F2), // 242,242,242
         elevation: 8,
         items: const [
           BottomNavigationBarItem(
@@ -176,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: (index) => setState(() => _selectedIndex = index),
         activeColor: const Color(0xFF6B46C1),
         inactiveColor: CupertinoColors.inactiveGray,
-        backgroundColor: CupertinoColors.systemBackground,
+        backgroundColor: const Color(0xFFF2F2F2), // 242,242,242
         items: const [
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.book),

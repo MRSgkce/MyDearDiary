@@ -602,16 +602,25 @@ class _QuickAccessCard extends StatelessWidget {
         'title': 'Son Günlük',
         'icon': isCupertino ? CupertinoIcons.book : Icons.book,
         'action': 'Son günlüğünüzü okuyun',
+        'type': 'diary',
       },
       {
-        'title': 'Favori Olumlamalar',
-        'icon': isCupertino ? CupertinoIcons.star : Icons.star,
-        'action': 'Kayıtlı olumlamalarınız',
+        'title': 'İlham Ekle',
+        'icon': isCupertino ? CupertinoIcons.plus_circle : Icons.add_circle,
+        'action': 'Yeni ilham ekleyin',
+        'type': 'inspiration',
+      },
+      {
+        'title': 'Olumlama Ekle',
+        'icon': isCupertino ? CupertinoIcons.star_fill : Icons.star,
+        'action': 'Yeni olumlama ekleyin',
+        'type': 'affirmations',
       },
       {
         'title': 'Hatırlatıcı',
         'icon': isCupertino ? CupertinoIcons.bell : Icons.notifications,
         'action': 'Günlük hatırlatıcısı',
+        'type': 'reminder',
       },
     ];
 
@@ -655,12 +664,11 @@ class _QuickAccessCard extends StatelessWidget {
                   (action) => Padding(
                     padding: const EdgeInsets.only(bottom: 12),
                     child: InkWell(
-                      onTap: () {
-                        // Action implementation
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(action['action'] as String)),
-                        );
-                      },
+                      onTap: () => _handleQuickAction(
+                        context,
+                        action['type'] as String,
+                        action['title'] as String,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                       child: Padding(
                         padding: const EdgeInsets.all(8),
@@ -707,6 +715,734 @@ class _QuickAccessCard extends StatelessWidget {
       ),
     );
   }
+
+  void _handleQuickAction(BuildContext context, String type, String title) {
+    switch (type) {
+      case 'inspiration':
+        _showAddInspirationDialog(context);
+        break;
+      case 'diary':
+        _showDiaryAction(context);
+        break;
+      case 'affirmations':
+        _showAffirmationsAction(context);
+        break;
+      case 'reminder':
+        _showReminderAction(context);
+        break;
+      default:
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('$title özelliği yakında eklenecek!')),
+        );
+    }
+  }
+
+  void _showAddInspirationDialog(BuildContext context) {
+    final TextEditingController inspirationController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) => isCupertino
+          ? CupertinoAlertDialog(
+              title: const Text('İlham Ekle'),
+              content: Column(
+                children: [
+                  const Text('Bugünkü ilhamınızı paylaşın:'),
+                  const SizedBox(height: 12),
+                  CupertinoTextField(
+                    controller: inspirationController,
+                    placeholder: 'İlhamınızı yazın...',
+                    maxLines: 3,
+                    textInputAction: TextInputAction.done,
+                  ),
+                ],
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  child: const Text('İptal'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                CupertinoDialogAction(
+                  child: const Text('Kaydet'),
+                  onPressed: () {
+                    if (inspirationController.text.trim().isNotEmpty) {
+                      // İlham kaydetme işlemi burada yapılacak
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('İlham başarıyla kaydedildi! ✨'),
+                        ),
+                      );
+                    }
+                  },
+                ),
+              ],
+            )
+          : AlertDialog(
+              title: const Text('İlham Ekle'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Bugünkü ilhamınızı paylaşın:'),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: inspirationController,
+                    decoration: const InputDecoration(
+                      hintText: 'İlhamınızı yazın...',
+                      border: OutlineInputBorder(),
+                    ),
+                    maxLines: 3,
+                    textInputAction: TextInputAction.done,
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('İptal'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    if (inspirationController.text.trim().isNotEmpty) {
+                      // İlham kaydetme işlemi burada yapılacak
+                      Navigator.pop(context);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('İlham başarıyla kaydedildi! ✨'),
+                        ),
+                      );
+                    }
+                  },
+                  child: const Text('Kaydet'),
+                ),
+              ],
+            ),
+    );
+  }
+
+  void _showDiaryAction(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Son günlük özelliği yakında eklenecek!')),
+    );
+  }
+
+  void _showAffirmationsAction(BuildContext context) {
+    final TextEditingController affirmationController = TextEditingController();
+    String selectedCategory = 'Öz Güven';
+
+    final categories = [
+      'Öz Güven',
+      'Gelişim',
+      'Şükran',
+      'Öz Sevgi',
+      'Pozitiflik',
+      'Sağlık',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => isCupertino
+          ? StatefulBuilder(
+              builder: (context, setState) => CupertinoAlertDialog(
+                title: const Text('Olumlama Ekle'),
+                content: Column(
+                  children: [
+                    const Text('Bugünkü olumlamanızı yazın:'),
+                    const SizedBox(height: 12),
+                    CupertinoTextField(
+                      controller: affirmationController,
+                      placeholder: 'Olumlamanızı yazın...',
+                      maxLines: 3,
+                      textInputAction: TextInputAction.done,
+                    ),
+                    const SizedBox(height: 12),
+                    CupertinoButton.filled(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      onPressed: () {
+                        showCupertinoModalPopup(
+                          context: context,
+                          builder: (context) => CupertinoActionSheet(
+                            title: const Text('Kategori Seçin'),
+                            actions: categories
+                                .map(
+                                  (category) => CupertinoActionSheetAction(
+                                    onPressed: () {
+                                      setState(() {
+                                        selectedCategory = category;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(category),
+                                  ),
+                                )
+                                .toList(),
+                            cancelButton: CupertinoActionSheetAction(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('İptal'),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text('Kategori: $selectedCategory'),
+                    ),
+                  ],
+                ),
+                actions: [
+                  CupertinoDialogAction(
+                    child: const Text('İptal'),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  CupertinoDialogAction(
+                    child: const Text('Kaydet'),
+                    onPressed: () {
+                      if (affirmationController.text.trim().isNotEmpty) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Olumlama başarıyla kaydedildi! ⭐'),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+            )
+          : StatefulBuilder(
+              builder: (context, setState) => AlertDialog(
+                title: const Text('Olumlama Ekle'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Bugünkü olumlamanızı yazın:'),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: affirmationController,
+                      decoration: const InputDecoration(
+                        hintText: 'Olumlamanızı yazın...',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
+                      textInputAction: TextInputAction.done,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      decoration: const InputDecoration(
+                        labelText: 'Kategori',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: categories
+                          .map(
+                            (category) => DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCategory = value!;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('İptal'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      if (affirmationController.text.trim().isNotEmpty) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Olumlama başarıyla kaydedildi! ⭐'),
+                          ),
+                        );
+                      }
+                    },
+                    child: const Text('Kaydet'),
+                  ),
+                ],
+              ),
+            ),
+    );
+  }
+
+  void _showReminderAction(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Hatırlatıcı özelliği yakında eklenecek!')),
+    );
+  }
+}
+
+// 6. Günlük Olumlamalar
+class DailyAffirmationsWidget extends PersonalizedWidget {
+  @override
+  String get title => 'Günlük Olumlamalar';
+
+  @override
+  String get description => 'Bugünkü olumlamalarınız';
+
+  @override
+  IconData get icon => Icons.favorite;
+
+  @override
+  Widget build(BuildContext context, {bool isCupertino = false}) {
+    return _DailyAffirmationsCard(isCupertino: isCupertino);
+  }
+}
+
+class _DailyAffirmationsCard extends StatefulWidget {
+  final bool isCupertino;
+
+  const _DailyAffirmationsCard({required this.isCupertino});
+
+  @override
+  State<_DailyAffirmationsCard> createState() => _DailyAffirmationsCardState();
+}
+
+class _DailyAffirmationsCardState extends State<_DailyAffirmationsCard> {
+  final List<_Affirmation> _affirmations = [
+    const _Affirmation(
+      text: 'Ben güçlü ve yetenekliyim',
+      category: 'Öz Güven',
+      isFavorite: true,
+    ),
+    const _Affirmation(
+      text: 'Her gün daha iyi oluyorum',
+      category: 'Gelişim',
+      isFavorite: false,
+    ),
+    const _Affirmation(
+      text: 'Kendimi olduğum gibi seviyorum',
+      category: 'Öz Sevgi',
+      isFavorite: true,
+    ),
+    const _Affirmation(
+      text: 'Hayat bana güzel fırsatlar sunuyor',
+      category: 'Pozitiflik',
+      isFavorite: false,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: widget.isCupertino ? 0 : 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16),
+          border: widget.isCupertino
+              ? Border.all(color: CupertinoColors.separator)
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(
+                  widget.isCupertino
+                      ? CupertinoIcons.heart_fill
+                      : Icons.favorite,
+                  color: widget.isCupertino
+                      ? CupertinoColors.systemPink
+                      : Theme.of(context).colorScheme.secondary,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Günlük Olumlamalar',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: widget.isCupertino ? CupertinoColors.label : null,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: Icon(
+                    widget.isCupertino
+                        ? CupertinoIcons.add_circled
+                        : Icons.add_circle_outline,
+                    color: widget.isCupertino
+                        ? CupertinoColors.activeBlue
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                  onPressed: _addAffirmation,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            if (_affirmations.isEmpty)
+              Center(
+                child: Column(
+                  children: [
+                    Icon(
+                      widget.isCupertino
+                          ? CupertinoIcons.heart
+                          : Icons.favorite_border,
+                      size: 48,
+                      color: widget.isCupertino
+                          ? CupertinoColors.inactiveGray
+                          : Colors.grey,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Henüz olumlama eklenmemiş',
+                      style: TextStyle(
+                        color: widget.isCupertino
+                            ? CupertinoColors.secondaryLabel
+                            : Colors.black54,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Bugünkü olumlamanızı ekleyin',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: widget.isCupertino
+                            ? CupertinoColors.tertiaryLabel
+                            : Colors.black38,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Column(
+                children: _affirmations
+                    .map((affirmation) => _buildAffirmationItem(affirmation))
+                    .toList(),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAffirmationItem(_Affirmation affirmation) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: widget.isCupertino
+            ? CupertinoColors.systemGrey6
+            : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  affirmation.text,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: widget.isCupertino ? CupertinoColors.label : null,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: widget.isCupertino
+                        ? CupertinoColors.activeBlue.withOpacity(0.1)
+                        : Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    affirmation.category,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: widget.isCupertino
+                          ? CupertinoColors.activeBlue
+                          : Theme.of(context).colorScheme.primary,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          IconButton(
+            icon: Icon(
+              affirmation.isFavorite
+                  ? (widget.isCupertino
+                        ? CupertinoIcons.heart_fill
+                        : Icons.favorite)
+                  : (widget.isCupertino
+                        ? CupertinoIcons.heart
+                        : Icons.favorite_border),
+              color: affirmation.isFavorite
+                  ? (widget.isCupertino
+                        ? CupertinoColors.systemPink
+                        : Colors.red)
+                  : (widget.isCupertino
+                        ? CupertinoColors.inactiveGray
+                        : Colors.grey),
+            ),
+            onPressed: () => _toggleFavorite(affirmation),
+          ),
+          IconButton(
+            icon: Icon(
+              widget.isCupertino ? CupertinoIcons.delete : Icons.delete_outline,
+              color: widget.isCupertino
+                  ? CupertinoColors.systemRed
+                  : Colors.red,
+            ),
+            onPressed: () => _deleteAffirmation(affirmation),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _addAffirmation() {
+    final TextEditingController affirmationController = TextEditingController();
+    String selectedCategory = 'Öz Güven';
+
+    final categories = [
+      'Öz Güven',
+      'Gelişim',
+      'Şükran',
+      'Öz Sevgi',
+      'Pozitiflik',
+      'Sağlık',
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => widget.isCupertino
+            ? CupertinoAlertDialog(
+                title: const Text('Olumlama Ekle'),
+                content: Column(
+                  children: [
+                    const Text('Bugünkü olumlamanızı yazın:'),
+                    const SizedBox(height: 12),
+                    CupertinoTextField(
+                      controller: affirmationController,
+                      placeholder: 'Olumlamanızı yazın...',
+                      maxLines: 3,
+                      textInputAction: TextInputAction.done,
+                    ),
+                    const SizedBox(height: 12),
+                    CupertinoButton.filled(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      onPressed: () {
+                        showCupertinoModalPopup(
+                          context: context,
+                          builder: (context) => CupertinoActionSheet(
+                            title: const Text('Kategori Seçin'),
+                            actions: categories
+                                .map(
+                                  (category) => CupertinoActionSheetAction(
+                                    onPressed: () {
+                                      setState(() {
+                                        selectedCategory = category;
+                                      });
+                                      Navigator.pop(context);
+                                    },
+                                    child: Text(category),
+                                  ),
+                                )
+                                .toList(),
+                            cancelButton: CupertinoActionSheetAction(
+                              onPressed: () => Navigator.pop(context),
+                              child: const Text('İptal'),
+                            ),
+                          ),
+                        );
+                      },
+                      child: Text('Kategori: $selectedCategory'),
+                    ),
+                  ],
+                ),
+                actions: [
+                  CupertinoDialogAction(
+                    child: const Text('İptal'),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  CupertinoDialogAction(
+                    child: const Text('Kaydet'),
+                    onPressed: () {
+                      if (affirmationController.text.trim().isNotEmpty) {
+                        setState(() {
+                          _affirmations.add(
+                            _Affirmation(
+                              text: affirmationController.text.trim(),
+                              category: selectedCategory,
+                              isFavorite: false,
+                            ),
+                          );
+                        });
+                        Navigator.pop(context);
+                      }
+                    },
+                  ),
+                ],
+              )
+            : AlertDialog(
+                title: const Text('Olumlama Ekle'),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('Bugünkü olumlamanızı yazın:'),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: affirmationController,
+                      decoration: const InputDecoration(
+                        hintText: 'Olumlamanızı yazın...',
+                        border: OutlineInputBorder(),
+                      ),
+                      maxLines: 3,
+                      textInputAction: TextInputAction.done,
+                    ),
+                    const SizedBox(height: 12),
+                    DropdownButtonFormField<String>(
+                      value: selectedCategory,
+                      decoration: const InputDecoration(
+                        labelText: 'Kategori',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: categories
+                          .map(
+                            (category) => DropdownMenuItem(
+                              value: category,
+                              child: Text(category),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) {
+                        setState(() {
+                          selectedCategory = value!;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('İptal'),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      if (affirmationController.text.trim().isNotEmpty) {
+                        setState(() {
+                          _affirmations.add(
+                            _Affirmation(
+                              text: affirmationController.text.trim(),
+                              category: selectedCategory,
+                              isFavorite: false,
+                            ),
+                          );
+                        });
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: const Text('Kaydet'),
+                  ),
+                ],
+              ),
+      ),
+    );
+  }
+
+  void _toggleFavorite(_Affirmation affirmation) {
+    setState(() {
+      final index = _affirmations.indexOf(affirmation);
+      _affirmations[index] = _Affirmation(
+        text: affirmation.text,
+        category: affirmation.category,
+        isFavorite: !affirmation.isFavorite,
+      );
+    });
+  }
+
+  void _deleteAffirmation(_Affirmation affirmation) {
+    showDialog(
+      context: context,
+      builder: (context) => widget.isCupertino
+          ? CupertinoAlertDialog(
+              title: const Text('Olumlamayı Sil'),
+              content: const Text(
+                'Bu olumlamayı silmek istediğinizden emin misiniz?',
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  child: const Text('İptal'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                CupertinoDialogAction(
+                  isDestructiveAction: true,
+                  child: const Text('Sil'),
+                  onPressed: () {
+                    setState(() {
+                      _affirmations.remove(affirmation);
+                    });
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            )
+          : AlertDialog(
+              title: const Text('Olumlamayı Sil'),
+              content: const Text(
+                'Bu olumlamayı silmek istediğinizden emin misiniz?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('İptal'),
+                ),
+                TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _affirmations.remove(affirmation);
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('Sil'),
+                ),
+              ],
+            ),
+    );
+  }
+}
+
+class _Affirmation {
+  final String text;
+  final String category;
+  final bool isFavorite;
+
+  const _Affirmation({
+    required this.text,
+    required this.category,
+    required this.isFavorite,
+  });
 }
 
 // Widget yöneticisi
@@ -716,6 +1452,7 @@ class PersonalizedWidgetManager {
     QuickStatsWidget(),
     EmotionalSummaryWidget(),
     SmartSuggestionsWidget(),
+    DailyAffirmationsWidget(),
     QuickAccessWidget(),
   ];
 

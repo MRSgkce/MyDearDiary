@@ -22,6 +22,7 @@ class MyDearDiaryApp extends StatelessWidget {
         theme: const CupertinoThemeData(
           primaryColor: Color(0xFF6B46C1),
           brightness: Brightness.light,
+          scaffoldBackgroundColor: Color(0xFFF2F2F2), // 242,242,242
         ),
         home: const HomeScreen(),
       );
@@ -34,7 +35,30 @@ class MyDearDiaryApp extends StatelessWidget {
             brightness: Brightness.light,
           ),
           useMaterial3: true,
-          appBarTheme: const AppBarTheme(centerTitle: true, elevation: 0),
+          scaffoldBackgroundColor: const Color(0xFFF2F2F2), // 242,242,242
+          fontFamily: 'Inter',
+          textTheme: const TextTheme(
+            displayLarge: TextStyle(fontFamily: 'Inter'),
+            displayMedium: TextStyle(fontFamily: 'Inter'),
+            displaySmall: TextStyle(fontFamily: 'Inter'),
+            headlineLarge: TextStyle(fontFamily: 'Inter'),
+            headlineMedium: TextStyle(fontFamily: 'Inter'),
+            headlineSmall: TextStyle(fontFamily: 'Inter'),
+            titleLarge: TextStyle(fontFamily: 'Inter'),
+            titleMedium: TextStyle(fontFamily: 'Inter'),
+            titleSmall: TextStyle(fontFamily: 'Inter'),
+            bodyLarge: TextStyle(fontFamily: 'Inter'),
+            bodyMedium: TextStyle(fontFamily: 'Inter'),
+            bodySmall: TextStyle(fontFamily: 'Inter'),
+            labelLarge: TextStyle(fontFamily: 'Inter'),
+            labelMedium: TextStyle(fontFamily: 'Inter'),
+            labelSmall: TextStyle(fontFamily: 'Inter'),
+          ),
+          appBarTheme: const AppBarTheme(
+            centerTitle: true,
+            elevation: 0,
+            backgroundColor: Color(0xFFF2F2F2),
+          ),
           cardTheme: CardThemeData(
             elevation: 2,
             shape: RoundedRectangleBorder(
