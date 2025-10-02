@@ -4,9 +4,9 @@ import 'dart:io';
 
 class CustomAppBar extends StatelessWidget
     implements PreferredSizeWidget, ObstructingPreferredSizeWidget {
-  final VoidCallback? onPersonalizePressed;
+  final VoidCallback? onAddInspirationPressed;
 
-  const CustomAppBar({super.key, this.onPersonalizePressed});
+  const CustomAppBar({super.key, this.onAddInspirationPressed});
 
   @override
   Widget build(BuildContext context) {
@@ -17,13 +17,28 @@ class CustomAppBar extends StatelessWidget
           'MyDearDiary',
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
-        trailing: onPersonalizePressed != null
+        trailing: onAddInspirationPressed != null
             ? CupertinoButton(
-                padding: EdgeInsets.zero,
-                onPressed: onPersonalizePressed,
-                child: const Icon(
-                  CupertinoIcons.settings,
-                  color: CupertinoColors.activeBlue,
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                onPressed: onAddInspirationPressed,
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      CupertinoIcons.lightbulb,
+                      size: 14,
+                      color: CupertinoColors.systemYellow,
+                    ),
+                    SizedBox(width: 4),
+                    Text(
+                      'Yeni İlham Ekle',
+                      style: TextStyle(
+                        color: CupertinoColors.systemGrey,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w400,
+                      ),
+                    ),
+                  ],
                 ),
               )
             : null,
@@ -41,11 +56,23 @@ class CustomAppBar extends StatelessWidget
           ),
         ),
         centerTitle: true,
-        actions: onPersonalizePressed != null
+        actions: onAddInspirationPressed != null
             ? [
-                IconButton(
-                  onPressed: onPersonalizePressed,
-                  icon: const Icon(Icons.settings, color: Color(0xFF6B46C1)),
+                TextButton.icon(
+                  onPressed: onAddInspirationPressed,
+                  icon: const Icon(
+                    Icons.lightbulb_outline,
+                    size: 16,
+                    color: Color(0xFF6B46C1),
+                  ),
+                  label: const Text(
+                    'Yeni İlham Ekle',
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
                 ),
               ]
             : null,

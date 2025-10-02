@@ -1,7 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../services/inspiration_service.dart';
+import '../providers/inspiration_provider.dart';
 
-class InspirationTab extends StatelessWidget {
+class InspirationTab extends ConsumerWidget {
   const InspirationTab({super.key, this.isCupertino = false});
 
   final bool isCupertino;
@@ -33,36 +36,84 @@ class InspirationTab extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final inspirations = ref.watch(inspirationsProvider);
+
+    // Kullanıcının kaydettiği ilhamlar + varsayılan ilhamlar
+    final allInspirations = <_InspirationItem>[];
+
+    // Kullanıcının ilhamları
+    for (final inspiration in inspirations.reversed) {
+      allInspirations.add(_InspirationItem.user(inspiration));
+    }
+
+    // Varsayılan ilhamlar
+    for (final quote in _quotes) {
+      allInspirations.add(_InspirationItem.defaultQuote(quote));
+    }
+
     return PageView.builder(
       scrollDirection: Axis.vertical,
       physics: isCupertino
           ? const BouncingScrollPhysics(parent: PageScrollPhysics())
           : const PageScrollPhysics(),
-      itemCount: _quotes.length,
+      itemCount: allInspirations.length,
       itemBuilder: (context, index) {
-        final quote = _quotes[index];
+        final item = allInspirations[index];
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _InspirationCard(quote: quote, isCupertino: isCupertino),
+          child: _InspirationCard(
+            item: item,
+            isCupertino: isCupertino,
+            onDelete: item.isUser ? (id) => _deleteInspiration(ref, id) : null,
+          ),
         );
       },
     );
   }
+
+  Future<void> _deleteInspiration(WidgetRef ref, String id) async {
+    await ref.read(inspirationsProvider.notifier).deleteInspiration(id);
+  }
+}
+
+class _InspirationItem {
+  final _InspirationQuote? defaultQuote;
+  final InspirationEntry? userInspiration;
+  final bool isUser;
+
+  _InspirationItem._({
+    this.defaultQuote,
+    this.userInspiration,
+    required this.isUser,
+  });
+
+  factory _InspirationItem.defaultQuote(_InspirationQuote quote) {
+    return _InspirationItem._(defaultQuote: quote, isUser: false);
+  }
+
+  factory _InspirationItem.user(InspirationEntry inspiration) {
+    return _InspirationItem._(userInspiration: inspiration, isUser: true);
+  }
+
+  String get text => isUser ? userInspiration!.text : defaultQuote!.text;
+  String get author =>
+      isUser ? (userInspiration!.author ?? 'Sen') : defaultQuote!.author;
 }
 
 class _InspirationCard extends StatelessWidget {
-  const _InspirationCard({required this.quote, required this.isCupertino});
+  const _InspirationCard({
+    required this.item,
+    required this.isCupertino,
+    this.onDelete,
+  });
 
-  final _InspirationQuote quote;
+  final _InspirationItem item;
   final bool isCupertino;
+  final Function(String)? onDelete;
 
   @override
   Widget build(BuildContext context) {
-    final Color borderColor = isCupertino
-        ? CupertinoColors.separator
-        : Theme.of(context).colorScheme.outline.withOpacity(0.3);
-
     final TextStyle quoteStyle = isCupertino
         ? const TextStyle(
             fontSize: 20,
@@ -125,18 +176,24 @@ class _InspirationCard extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          '"${quote.text}"',
+                          '"${item.text}"',
                           textAlign: TextAlign.center,
                           style: quoteStyle,
                         ),
                         const SizedBox(height: 24),
                         Text(
-                          '— ${quote.author}',
+                          '— ${item.author}',
                           style: authorStyle,
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 32),
-                        _ActionRow(isCupertino: isCupertino),
+                        _ActionRow(
+                          isCupertino: isCupertino,
+                          isUser: item.isUser,
+                          onDelete: item.isUser
+                              ? () => onDelete!(item.userInspiration!.id)
+                              : null,
+                        ),
                       ],
                     ),
                   ),
@@ -152,64 +209,91 @@ class _InspirationCard extends StatelessWidget {
 }
 
 class _ActionRow extends StatelessWidget {
-  const _ActionRow({required this.isCupertino});
+  const _ActionRow({
+    required this.isCupertino,
+    this.isUser = false,
+    this.onDelete,
+  });
 
   final bool isCupertino;
+  final bool isUser;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
-    if (isCupertino) {
-      return Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          _CupertinoIconButton(icon: CupertinoIcons.heart),
-          SizedBox(width: 32),
-          _CupertinoIconButton(icon: CupertinoIcons.bookmark),
-          SizedBox(width: 32),
-          _CupertinoIconButton(icon: CupertinoIcons.square_arrow_up),
-        ],
-      );
+    final actions = <Widget>[];
+
+    if (isUser && onDelete != null) {
+      // Kullanıcının ilhamı ise silme butonu ekle
+      actions.addAll([
+        isCupertino
+            ? _CupertinoIconButton(
+                icon: CupertinoIcons.delete,
+                onPressed: onDelete!,
+                color: CupertinoColors.destructiveRed,
+              )
+            : _MaterialIconButton(
+                icon: Icons.delete_outline,
+                onPressed: onDelete!,
+                color: Colors.red,
+              ),
+        const SizedBox(width: 32),
+      ]);
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: const [
-        _MaterialIconButton(icon: Icons.favorite_border),
-        SizedBox(width: 32),
-        _MaterialIconButton(icon: Icons.bookmark_border),
-        SizedBox(width: 32),
-        _MaterialIconButton(icon: Icons.ios_share_outlined),
-      ],
-    );
+    // Diğer butonlar
+    if (isCupertino) {
+      actions.addAll([
+        const _CupertinoIconButton(icon: CupertinoIcons.heart),
+        const SizedBox(width: 32),
+        const _CupertinoIconButton(icon: CupertinoIcons.bookmark),
+        const SizedBox(width: 32),
+        const _CupertinoIconButton(icon: CupertinoIcons.square_arrow_up),
+      ]);
+    } else {
+      actions.addAll([
+        const _MaterialIconButton(icon: Icons.favorite_border),
+        const SizedBox(width: 32),
+        const _MaterialIconButton(icon: Icons.bookmark_border),
+        const SizedBox(width: 32),
+        const _MaterialIconButton(icon: Icons.ios_share_outlined),
+      ]);
+    }
+
+    return Row(mainAxisAlignment: MainAxisAlignment.center, children: actions);
   }
 }
 
 class _CupertinoIconButton extends StatelessWidget {
-  const _CupertinoIconButton({required this.icon});
+  const _CupertinoIconButton({required this.icon, this.onPressed, this.color});
 
   final IconData icon;
+  final VoidCallback? onPressed;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     return CupertinoButton(
       padding: EdgeInsets.zero,
-      onPressed: () {},
-      child: Icon(icon, size: 24, color: CupertinoColors.inactiveGray),
+      onPressed: onPressed ?? () {},
+      child: Icon(icon, size: 24, color: color ?? CupertinoColors.inactiveGray),
     );
   }
 }
 
 class _MaterialIconButton extends StatelessWidget {
-  const _MaterialIconButton({required this.icon});
+  const _MaterialIconButton({required this.icon, this.onPressed, this.color});
 
   final IconData icon;
+  final VoidCallback? onPressed;
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      onPressed: () {},
+      onPressed: onPressed ?? () {},
       icon: Icon(icon),
-      color: Theme.of(context).colorScheme.outline,
+      color: color ?? Theme.of(context).colorScheme.outline,
       splashRadius: 24,
     );
   }

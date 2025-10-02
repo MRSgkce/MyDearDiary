@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/inspiration_provider.dart';
 
 // Ana sayfa widget'ları için base sınıf
 abstract class PersonalizedWidget {
@@ -573,57 +575,30 @@ class _SmartSuggestionsCard extends StatelessWidget {
   }
 }
 
-// 5. Hızlı Erişim
-class QuickAccessWidget extends PersonalizedWidget {
+// 5. İlham Ekleme Butonu
+class AddInspirationWidget extends PersonalizedWidget {
   @override
-  String get title => 'Hızlı Erişim';
+  String get title => 'İlham Ekle';
 
   @override
-  String get description => 'Sık kullanılan özellikler';
+  String get description => 'Yeni ilhamınızı paylaşın';
 
   @override
-  IconData get icon => Icons.speed;
+  IconData get icon => Icons.lightbulb_outline;
 
   @override
   Widget build(BuildContext context, {bool isCupertino = false}) {
-    return _QuickAccessCard(isCupertino: isCupertino);
+    return _AddInspirationCard(isCupertino: isCupertino);
   }
 }
 
-class _QuickAccessCard extends StatelessWidget {
+class _AddInspirationCard extends ConsumerWidget {
   final bool isCupertino;
 
-  const _QuickAccessCard({required this.isCupertino});
+  const _AddInspirationCard({required this.isCupertino});
 
   @override
-  Widget build(BuildContext context) {
-    final quickActions = [
-      {
-        'title': 'Son Günlük',
-        'icon': isCupertino ? CupertinoIcons.book : Icons.book,
-        'action': 'Son günlüğünüzü okuyun',
-        'type': 'diary',
-      },
-      {
-        'title': 'İlham Ekle',
-        'icon': isCupertino ? CupertinoIcons.plus_circle : Icons.add_circle,
-        'action': 'Yeni ilham ekleyin',
-        'type': 'inspiration',
-      },
-      {
-        'title': 'Olumlama Ekle',
-        'icon': isCupertino ? CupertinoIcons.star_fill : Icons.star,
-        'action': 'Yeni olumlama ekleyin',
-        'type': 'affirmations',
-      },
-      {
-        'title': 'Hatırlatıcı',
-        'icon': isCupertino ? CupertinoIcons.bell : Icons.notifications,
-        'action': 'Günlük hatırlatıcısı',
-        'type': 'reminder',
-      },
-    ];
-
+  Widget build(BuildContext context, WidgetRef ref) {
     return Card(
       elevation: isCupertino ? 0 : 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -641,15 +616,17 @@ class _QuickAccessCard extends StatelessWidget {
             Row(
               children: [
                 Icon(
-                  isCupertino ? CupertinoIcons.speedometer : Icons.speed,
+                  isCupertino
+                      ? CupertinoIcons.lightbulb
+                      : Icons.lightbulb_outline,
                   color: isCupertino
-                      ? CupertinoColors.activeOrange
+                      ? CupertinoColors.systemYellow
                       : Theme.of(context).colorScheme.primary,
                   size: 20,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Hızlı Erişim',
+                  'İlham Ekle',
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -659,86 +636,38 @@ class _QuickAccessCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 16),
-            ...quickActions
-                .map(
-                  (action) => Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: InkWell(
-                      onTap: () => _handleQuickAction(
-                        context,
-                        action['type'] as String,
-                        action['title'] as String,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Row(
-                          children: [
-                            Icon(
-                              action['icon'] as IconData,
-                              size: 20,
-                              color: isCupertino
-                                  ? CupertinoColors.activeBlue
-                                  : Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                action['title'] as String,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w500,
-                                  color: isCupertino
-                                      ? CupertinoColors.label
-                                      : null,
-                                ),
-                              ),
-                            ),
-                            Icon(
-                              isCupertino
-                                  ? CupertinoIcons.chevron_right
-                                  : Icons.arrow_forward_ios,
-                              size: 16,
-                              color: isCupertino
-                                  ? CupertinoColors.inactiveGray
-                                  : Colors.black54,
-                            ),
-                          ],
-                        ),
-                      ),
+            Text(
+              'Bugünkü ilhamınızı paylaşın ve ilham sayfasında görün!',
+              style: TextStyle(
+                fontSize: 14,
+                color: isCupertino
+                    ? CupertinoColors.secondaryLabel
+                    : Colors.black54,
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: isCupertino
+                  ? CupertinoButton.filled(
+                      onPressed: () => _showAddInspirationDialog(context, ref),
+                      child: const Text('İlham Ekle'),
+                    )
+                  : ElevatedButton.icon(
+                      onPressed: () => _showAddInspirationDialog(context, ref),
+                      icon: const Icon(Icons.add),
+                      label: const Text('İlham Ekle'),
                     ),
-                  ),
-                )
-                .toList(),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _handleQuickAction(BuildContext context, String type, String title) {
-    switch (type) {
-      case 'inspiration':
-        _showAddInspirationDialog(context);
-        break;
-      case 'diary':
-        _showDiaryAction(context);
-        break;
-      case 'affirmations':
-        _showAffirmationsAction(context);
-        break;
-      case 'reminder':
-        _showReminderAction(context);
-        break;
-      default:
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('$title özelliği yakında eklenecek!')),
-        );
-    }
-  }
-
-  void _showAddInspirationDialog(BuildContext context) {
+  void _showAddInspirationDialog(BuildContext context, WidgetRef ref) {
     final TextEditingController inspirationController = TextEditingController();
+    final TextEditingController authorController = TextEditingController();
 
     showDialog(
       context: context,
@@ -755,6 +684,12 @@ class _QuickAccessCard extends StatelessWidget {
                     maxLines: 3,
                     textInputAction: TextInputAction.done,
                   ),
+                  const SizedBox(height: 8),
+                  CupertinoTextField(
+                    controller: authorController,
+                    placeholder: 'Yazar (isteğe bağlı)',
+                    textInputAction: TextInputAction.done,
+                  ),
                 ],
               ),
               actions: [
@@ -764,9 +699,16 @@ class _QuickAccessCard extends StatelessWidget {
                 ),
                 CupertinoDialogAction(
                   child: const Text('Kaydet'),
-                  onPressed: () {
+                  onPressed: () async {
                     if (inspirationController.text.trim().isNotEmpty) {
-                      // İlham kaydetme işlemi burada yapılacak
+                      await ref
+                          .read(inspirationsProvider.notifier)
+                          .addInspiration(
+                            inspirationController.text.trim(),
+                            author: authorController.text.trim().isNotEmpty
+                                ? authorController.text.trim()
+                                : null,
+                          );
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -794,6 +736,15 @@ class _QuickAccessCard extends StatelessWidget {
                     maxLines: 3,
                     textInputAction: TextInputAction.done,
                   ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: authorController,
+                    decoration: const InputDecoration(
+                      hintText: 'Yazar (isteğe bağlı)',
+                      border: OutlineInputBorder(),
+                    ),
+                    textInputAction: TextInputAction.done,
+                  ),
                 ],
               ),
               actions: [
@@ -802,9 +753,16 @@ class _QuickAccessCard extends StatelessWidget {
                   child: const Text('İptal'),
                 ),
                 TextButton(
-                  onPressed: () {
+                  onPressed: () async {
                     if (inspirationController.text.trim().isNotEmpty) {
-                      // İlham kaydetme işlemi burada yapılacak
+                      await ref
+                          .read(inspirationsProvider.notifier)
+                          .addInspiration(
+                            inspirationController.text.trim(),
+                            author: authorController.text.trim().isNotEmpty
+                                ? authorController.text.trim()
+                                : null,
+                          );
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
@@ -817,167 +775,6 @@ class _QuickAccessCard extends StatelessWidget {
                 ),
               ],
             ),
-    );
-  }
-
-  void _showDiaryAction(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Son günlük özelliği yakında eklenecek!')),
-    );
-  }
-
-  void _showAffirmationsAction(BuildContext context) {
-    final TextEditingController affirmationController = TextEditingController();
-    String selectedCategory = 'Öz Güven';
-
-    final categories = [
-      'Öz Güven',
-      'Gelişim',
-      'Şükran',
-      'Öz Sevgi',
-      'Pozitiflik',
-      'Sağlık',
-    ];
-
-    showDialog(
-      context: context,
-      builder: (context) => isCupertino
-          ? StatefulBuilder(
-              builder: (context, setState) => CupertinoAlertDialog(
-                title: const Text('Olumlama Ekle'),
-                content: Column(
-                  children: [
-                    const Text('Bugünkü olumlamanızı yazın:'),
-                    const SizedBox(height: 12),
-                    CupertinoTextField(
-                      controller: affirmationController,
-                      placeholder: 'Olumlamanızı yazın...',
-                      maxLines: 3,
-                      textInputAction: TextInputAction.done,
-                    ),
-                    const SizedBox(height: 12),
-                    CupertinoButton.filled(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      onPressed: () {
-                        showCupertinoModalPopup(
-                          context: context,
-                          builder: (context) => CupertinoActionSheet(
-                            title: const Text('Kategori Seçin'),
-                            actions: categories
-                                .map(
-                                  (category) => CupertinoActionSheetAction(
-                                    onPressed: () {
-                                      setState(() {
-                                        selectedCategory = category;
-                                      });
-                                      Navigator.pop(context);
-                                    },
-                                    child: Text(category),
-                                  ),
-                                )
-                                .toList(),
-                            cancelButton: CupertinoActionSheetAction(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('İptal'),
-                            ),
-                          ),
-                        );
-                      },
-                      child: Text('Kategori: $selectedCategory'),
-                    ),
-                  ],
-                ),
-                actions: [
-                  CupertinoDialogAction(
-                    child: const Text('İptal'),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                  CupertinoDialogAction(
-                    child: const Text('Kaydet'),
-                    onPressed: () {
-                      if (affirmationController.text.trim().isNotEmpty) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Olumlama başarıyla kaydedildi! ⭐'),
-                          ),
-                        );
-                      }
-                    },
-                  ),
-                ],
-              ),
-            )
-          : StatefulBuilder(
-              builder: (context, setState) => AlertDialog(
-                title: const Text('Olumlama Ekle'),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Text('Bugünkü olumlamanızı yazın:'),
-                    const SizedBox(height: 12),
-                    TextField(
-                      controller: affirmationController,
-                      decoration: const InputDecoration(
-                        hintText: 'Olumlamanızı yazın...',
-                        border: OutlineInputBorder(),
-                      ),
-                      maxLines: 3,
-                      textInputAction: TextInputAction.done,
-                    ),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: selectedCategory,
-                      decoration: const InputDecoration(
-                        labelText: 'Kategori',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: categories
-                          .map(
-                            (category) => DropdownMenuItem(
-                              value: category,
-                              child: Text(category),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          selectedCategory = value!;
-                        });
-                      },
-                    ),
-                  ],
-                ),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('İptal'),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      if (affirmationController.text.trim().isNotEmpty) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Olumlama başarıyla kaydedildi! ⭐'),
-                          ),
-                        );
-                      }
-                    },
-                    child: const Text('Kaydet'),
-                  ),
-                ],
-              ),
-            ),
-    );
-  }
-
-  void _showReminderAction(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Hatırlatıcı özelliği yakında eklenecek!')),
     );
   }
 }
@@ -1453,7 +1250,7 @@ class PersonalizedWidgetManager {
     EmotionalSummaryWidget(),
     SmartSuggestionsWidget(),
     DailyAffirmationsWidget(),
-    QuickAccessWidget(),
+    AddInspirationWidget(),
   ];
 
   static List<PersonalizedWidget> get availableWidgets => _availableWidgets;

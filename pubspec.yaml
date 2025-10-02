@@ -43,6 +43,9 @@ dependencies:
   
   # Tarih formatı için
   intl: ^0.19.0
+  
+  # State management için
+  flutter_riverpod: ^2.5.1
 
 dev_dependencies:
   flutter_test:
