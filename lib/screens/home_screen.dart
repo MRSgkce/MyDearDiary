@@ -5,11 +5,13 @@ import '../models/diary_entry.dart';
 import '../services/diary_service.dart';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/inspiration_tab.dart';
-import '../widgets/mood_card.dart';
 import '../widgets/mood_tab.dart';
 import '../widgets/weekly_activities.dart';
 import '../widgets/quick_actions.dart';
 import '../widgets/recent_entries.dart';
+import '../widgets/personalized_home_widgets.dart';
+import '../widgets/personalization_settings.dart';
+import '../widgets/profile_tab.dart';
 import 'add_entry_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,6 +24,13 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   List<DiaryEntry> _recentEntries = [];
   int _selectedIndex = 0; // Seçili sekme indeksi
+  List<String> _enabledWidgets = [
+    'Günlük Hedef',
+    'Hızlı İstatistikler',
+    'Duygusal Özet',
+    'Akıllı Öneriler',
+    'Hızlı Erişim',
+  ]; // Aktif widget'lar
 
   @override
   void initState() {
@@ -36,6 +45,23 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _openPersonalizationSettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => PersonalizationSettings(
+          isCupertino: Platform.isIOS,
+          enabledWidgets: _enabledWidgets,
+          onWidgetsChanged: (newWidgets) {
+            setState(() {
+              _enabledWidgets = newWidgets;
+            });
+          },
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (Platform.isIOS) {
@@ -47,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildMaterialLayout() {
     return Scaffold(
-      appBar: const CustomAppBar(),
+      appBar: CustomAppBar(onPersonalizePressed: _openPersonalizationSettings),
       body: SafeArea(child: _buildMaterialBody()),
       floatingActionButton: _selectedIndex == 0
           ? FloatingActionButton.extended(
@@ -67,63 +93,36 @@ class _HomeScreenState extends State<HomeScreen> {
         type: BottomNavigationBarType.fixed,
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
-        selectedItemColor: Theme.of(context).colorScheme.primary,
-        unselectedItemColor: Theme.of(context).colorScheme.outline,
+        selectedItemColor: const Color(0xFF6B46C1),
+        unselectedItemColor: Colors.grey,
         selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        items: [
+        backgroundColor: Colors.white,
+        elevation: 8,
+        items: const [
           BottomNavigationBarItem(
-            icon: Image.asset(
-              'assets/images/bulb.png',
-              width: 24,
-              height: 24,
-              color: Theme.of(context).colorScheme.outline,
-            ),
-            activeIcon: Image.asset(
-              'assets/images/bulb.png',
-              width: 24,
-              height: 24,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-            label: 'İlham',
-          ),
-          BottomNavigationBarItem(
-            icon: Image.asset(
-              'assets/icons/diary_outline.png',
-              width: 24,
-              height: 24,
-            ),
-            activeIcon: Image.asset(
-              'assets/icons/diary_filled.png',
-              width: 24,
-              height: 24,
-            ),
+            icon: Icon(Icons.book_outlined),
+            activeIcon: Icon(Icons.book),
             label: 'Günlük',
           ),
           BottomNavigationBarItem(
-            icon: Image.asset(
-              'assets/icons/mood_outline.png',
-              width: 24,
-              height: 24,
-            ),
-            activeIcon: Image.asset(
-              'assets/icons/mood_filled.png',
-              width: 24,
-              height: 24,
-            ),
+            icon: Icon(Icons.format_quote_outlined),
+            activeIcon: Icon(Icons.format_quote),
+            label: 'İlham',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_outline),
+            activeIcon: Icon(Icons.favorite),
             label: 'Ruh Hali',
           ),
           BottomNavigationBarItem(
-            icon: Image.asset(
-              'assets/icons/meditation_outline.png',
-              width: 24,
-              height: 24,
-            ),
-            activeIcon: Image.asset(
-              'assets/icons/meditation_filled.png',
-              width: 24,
-              height: 24,
-            ),
+            icon: Icon(Icons.self_improvement_outlined),
+            activeIcon: Icon(Icons.self_improvement),
             label: 'Meditasyon',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            activeIcon: Icon(Icons.person),
+            label: 'Profil',
           ),
         ],
       ),
@@ -150,6 +149,19 @@ class _HomeScreenState extends State<HomeScreen> {
       return const MoodTab();
     }
 
+    if (_selectedIndex == 3) {
+      return _buildComingSoonContent(
+        title: 'Meditasyon',
+        description:
+            'Meditasyon deneyimi hazırlık aşamasında. Sakinleşmek için kısa egzersizler burada yer alacak!',
+        icon: Icons.self_improvement_outlined,
+      );
+    }
+
+    if (_selectedIndex == 4) {
+      return const ProfileTab();
+    }
+
     return _buildComingSoonContent(
       title: _tabTitle(_selectedIndex),
       description: _tabDescription(_selectedIndex),
@@ -164,6 +176,7 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: (index) => setState(() => _selectedIndex = index),
         activeColor: const Color(0xFF6B46C1),
         inactiveColor: CupertinoColors.inactiveGray,
+        backgroundColor: CupertinoColors.systemBackground,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(CupertinoIcons.book),
@@ -171,8 +184,8 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Günlük',
           ),
           BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.lightbulb),
-            activeIcon: Icon(CupertinoIcons.lightbulb_fill),
+            icon: Icon(CupertinoIcons.chat_bubble_2),
+            activeIcon: Icon(CupertinoIcons.chat_bubble_2_fill),
             label: 'İlham',
           ),
           BottomNavigationBarItem(
@@ -185,13 +198,20 @@ class _HomeScreenState extends State<HomeScreen> {
             activeIcon: Icon(CupertinoIcons.sparkles),
             label: 'Meditasyon',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(CupertinoIcons.person),
+            activeIcon: Icon(CupertinoIcons.person_fill),
+            label: 'Profil',
+          ),
         ],
       ),
       tabBuilder: (context, index) {
         if (index == 0) {
           return CupertinoTabView(
             builder: (context) => CupertinoPageScaffold(
-              navigationBar: const CustomAppBar(),
+              navigationBar: CustomAppBar(
+                onPersonalizePressed: _openPersonalizationSettings,
+              ),
               child: SafeArea(
                 bottom: false,
                 child: SingleChildScrollView(
@@ -212,6 +232,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   ? const InspirationTab(isCupertino: true)
                   : index == 2
                   ? const MoodTab(isCupertino: true)
+                  : index == 3
+                  ? _buildComingSoonContent(
+                      title: 'Meditasyon',
+                      description:
+                          'Meditasyon deneyimi hazırlık aşamasında. Sakinleşmek için kısa egzersizler burada yer alacak!',
+                      icon: CupertinoIcons.sparkles,
+                      isCupertino: true,
+                    )
+                  : index == 4
+                  ? const ProfileTab(isCupertino: true)
                   : _buildComingSoonContent(
                       title: _tabTitle(index),
                       description: _tabDescription(index),
@@ -225,25 +255,37 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Ana içerik widget'ı
+  // Ana içerik widget'ı - Kişiselleştirilebilir
   Widget _buildDiaryContent() {
+    final availableWidgets = PersonalizedWidgetManager.availableWidgets;
+    final isCupertino = Platform.isIOS;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Ruh hali kartı
-        const MoodCard(),
+        // Kişiselleştirilebilir widget'lar
+        ..._enabledWidgets.map((widgetTitle) {
+          final widget = availableWidgets.firstWhere(
+            (w) => w.title == widgetTitle,
+            orElse: () => availableWidgets.first,
+          );
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 16),
+            child: widget.build(context, isCupertino: isCupertino),
+          );
+        }).toList(),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
 
         // Haftalık aktiviteler
         const WeeklyActivities(),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
 
         // Hızlı eylemler
         QuickActions(onRefresh: _loadRecentEntries),
 
-        const SizedBox(height: 32),
+        const SizedBox(height: 16),
 
         // Son girişler
         RecentEntries(entries: _recentEntries, onRefresh: _loadRecentEntries),
@@ -300,12 +342,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _tabTitle(int index) {
     switch (index) {
+      case 0:
+        return 'Günlük';
       case 1:
         return 'İlham';
       case 2:
         return 'Ruh Hali';
       case 3:
         return 'Meditasyon';
+      case 4:
+        return 'Profil';
       default:
         return 'Günlük';
     }
@@ -313,12 +359,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String _tabDescription(int index) {
     switch (index) {
+      case 0:
+        return 'Günlük yazma alışkanlığınızı geliştirin.';
       case 1:
         return 'İlham köşesi üzerinde çalışıyoruz. Yakında size ilham verecek içerikler burada olacak!';
       case 2:
         return 'Ruh hali takibi çok yakında devrede olacak. Günlük modunuzu kolayca kaydedebileceksiniz.';
       case 3:
         return 'Meditasyon deneyimi hazırlık aşamasında. Sakinleşmek için kısa egzersizler burada yer alacak!';
+      case 4:
+        return 'Profil ayarlarınız ve kişisel bilgileriniz.';
       default:
         return '';
     }
@@ -326,12 +376,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   IconData _materialPlaceholderIcon(int index) {
     switch (index) {
+      case 0:
+        return Icons.book_outlined;
       case 1:
-        return Icons.lightbulb_outline;
+        return Icons.format_quote_outlined;
       case 2:
         return Icons.favorite_outline;
       case 3:
         return Icons.self_improvement_outlined;
+      case 4:
+        return Icons.person_outline;
       default:
         return Icons.book_outlined;
     }
@@ -339,12 +393,16 @@ class _HomeScreenState extends State<HomeScreen> {
 
   IconData _cupertinoPlaceholderIcon(int index) {
     switch (index) {
+      case 0:
+        return CupertinoIcons.book;
       case 1:
-        return CupertinoIcons.lightbulb;
+        return CupertinoIcons.chat_bubble_2;
       case 2:
         return CupertinoIcons.heart;
       case 3:
         return CupertinoIcons.sparkles;
+      case 4:
+        return CupertinoIcons.person;
       default:
         return CupertinoIcons.book;
     }

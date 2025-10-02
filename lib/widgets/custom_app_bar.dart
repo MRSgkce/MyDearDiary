@@ -4,7 +4,9 @@ import 'dart:io';
 
 class CustomAppBar extends StatelessWidget
     implements PreferredSizeWidget, ObstructingPreferredSizeWidget {
-  const CustomAppBar({super.key});
+  final VoidCallback? onPersonalizePressed;
+
+  const CustomAppBar({super.key, this.onPersonalizePressed});
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +17,16 @@ class CustomAppBar extends StatelessWidget
           'MyDearDiary',
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
         ),
+        trailing: onPersonalizePressed != null
+            ? CupertinoButton(
+                padding: EdgeInsets.zero,
+                onPressed: onPersonalizePressed,
+                child: const Icon(
+                  CupertinoIcons.settings,
+                  color: CupertinoColors.activeBlue,
+                ),
+              )
+            : null,
       );
     } else {
       return AppBar(
@@ -29,6 +41,14 @@ class CustomAppBar extends StatelessWidget
           ),
         ),
         centerTitle: true,
+        actions: onPersonalizePressed != null
+            ? [
+                IconButton(
+                  onPressed: onPersonalizePressed,
+                  icon: const Icon(Icons.settings, color: Color(0xFF6B46C1)),
+                ),
+              ]
+            : null,
       );
     }
   }
