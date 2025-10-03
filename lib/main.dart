@@ -37,7 +37,7 @@ class MyDearDiaryApp extends StatelessWidget {
           ),
           useMaterial3: true,
           scaffoldBackgroundColor: const Color(0xFFF2F2F2), // Soft grey
-          fontFamily: 'Inter',
+          fontFamily: 'Comic Relief',
           textTheme: const TextTheme(
             displayLarge: TextStyle(fontFamily: 'Inter'),
             displayMedium: TextStyle(fontFamily: 'Inter'),

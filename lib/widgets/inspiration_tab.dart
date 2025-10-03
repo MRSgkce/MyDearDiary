@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lottie/lottie.dart';
 import '../services/inspiration_service.dart';
 import '../providers/inspiration_provider.dart';
 
@@ -52,25 +53,45 @@ class InspirationTab extends ConsumerWidget {
       allInspirations.add(_InspirationItem.defaultQuote(quote));
     }
 
-    return SizedBox(
-      height:
-          MediaQuery.of(context).size.height -
-          200, // AppBar ve Navigation için alan bırak
-      child: PageView.builder(
-        scrollDirection: Axis.vertical,
-        physics: isCupertino
-            ? const BouncingScrollPhysics(parent: PageScrollPhysics())
-            : const PageScrollPhysics(),
-        itemCount: allInspirations.length,
-        itemBuilder: (context, index) {
-          final item = allInspirations[index];
-          return _InspirationCard(
-            item: item,
-            isCupertino: isCupertino,
-            onDelete: item.isUser ? (id) => _deleteInspiration(ref, id) : null,
-          );
-        },
-      ),
+    return Stack(
+      children: [
+        // Ana içerik
+        SizedBox(
+          height:
+              MediaQuery.of(context).size.height -
+              200, // AppBar ve Navigation için alan bırak
+          child: PageView.builder(
+            scrollDirection: Axis.vertical,
+            physics: isCupertino
+                ? const BouncingScrollPhysics(parent: PageScrollPhysics())
+                : const PageScrollPhysics(),
+            itemCount: allInspirations.length,
+            itemBuilder: (context, index) {
+              final item = allInspirations[index];
+              return _InspirationCard(
+                item: item,
+                isCupertino: isCupertino,
+                onDelete: item.isUser
+                    ? (id) => _deleteInspiration(ref, id)
+                    : null,
+              );
+            },
+          ),
+        ),
+        // Lottie animasyonu - düşen yapraklar (arka plan, flu)
+        Positioned.fill(
+          child: IgnorePointer(
+            child: Opacity(
+              opacity: 0.15, // %15 şeffaflık
+              child: Lottie.asset(
+                'assets/animations/Autumn leaves.json',
+                fit: BoxFit.cover,
+                repeat: true,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -118,28 +139,40 @@ class _InspirationCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final TextStyle quoteStyle = isCupertino
         ? const TextStyle(
-            fontSize: 20,
+            fontFamily: 'Playpen Sans Thai',
+            fontSize: 24,
             fontWeight: FontWeight.w500,
             color: CupertinoColors.label,
             height: 1.5,
           )
         : Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontSize: 20,
+                fontFamily: 'Playpen Sans Thai',
+                fontSize: 24,
                 fontWeight: FontWeight.w500,
                 height: 1.5,
               ) ??
               const TextStyle(
-                fontSize: 20,
+                fontFamily: 'Playpen Sans Thai',
+                fontSize: 24,
                 fontWeight: FontWeight.w500,
                 height: 1.5,
               );
 
     final TextStyle authorStyle = isCupertino
-        ? const TextStyle(fontSize: 16, color: CupertinoColors.systemGrey)
-        : Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: Colors.black54) ??
-              const TextStyle(fontSize: 16, color: Colors.black54);
+        ? const TextStyle(
+            fontFamily: 'Playpen Sans Thai',
+            fontSize: 18,
+            color: CupertinoColors.systemGrey,
+          )
+        : Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontFamily: 'Playpen Sans Thai',
+                color: Colors.black54,
+              ) ??
+              const TextStyle(
+                fontFamily: 'Playpen Sans Thai',
+                fontSize: 18,
+                color: Colors.black54,
+              );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -221,22 +254,18 @@ class _ActionRow extends StatelessWidget {
       ]);
     }
 
-    // Diğer butonlar
+    // Diğer butonlar - Beğenme ve Kopyalama
     if (isCupertino) {
       actions.addAll([
         const _CupertinoIconButton(icon: CupertinoIcons.heart),
         const SizedBox(width: 32),
-        const _CupertinoIconButton(icon: CupertinoIcons.bookmark),
-        const SizedBox(width: 32),
-        const _CupertinoIconButton(icon: CupertinoIcons.square_arrow_up),
+        const _CupertinoIconButton(icon: CupertinoIcons.doc_on_doc),
       ]);
     } else {
       actions.addAll([
         const _MaterialIconButton(icon: Icons.favorite_border),
         const SizedBox(width: 32),
-        const _MaterialIconButton(icon: Icons.bookmark_border),
-        const SizedBox(width: 32),
-        const _MaterialIconButton(icon: Icons.ios_share_outlined),
+        const _MaterialIconButton(icon: Icons.copy),
       ]);
     }
 

@@ -46,6 +46,9 @@ dependencies:
   
   # State management için
   flutter_riverpod: ^2.5.1
+  
+  # Lottie animasyonları için
+  lottie: ^3.1.2
 
 dev_dependencies:
   flutter_test:
@@ -73,6 +76,7 @@ flutter:
   assets:
     - assets/images/
     - assets/fonts/
+    - assets/animations/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
@@ -93,4 +97,13 @@ flutter:
         - asset: assets/fonts/Inter-SemiBold.ttf
           weight: 600
         - asset: assets/fonts/Inter-Bold.ttf
+          weight: 700
+    - family: Playpen Sans Thai
+      fonts:
+        - asset: assets/fonts/PlaypenSansThai-Regular.ttf
+        - asset: assets/fonts/PlaypenSansThai-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/PlaypenSansThai-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/PlaypenSansThai-Bold.ttf
           weight: 700
