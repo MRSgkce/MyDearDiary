@@ -151,7 +151,7 @@ class HomeScreen extends ConsumerWidget {
             Icon(
               icon,
               size: 80,
-              color: isCupertino ? CupertinoColors.systemGrey : Colors.grey,
+              color: isCupertino ? CupertinoColors.systemGrey : Colors.amber,
             ),
             const SizedBox(height: 24),
             Text(

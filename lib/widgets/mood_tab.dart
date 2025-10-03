@@ -195,14 +195,16 @@ class _MoodTabState extends State<MoodTab> {
             children: [
               icon,
               const SizedBox(width: 12),
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Platform.isIOS
-                      ? CupertinoColors.label
-                      : Theme.of(context).colorScheme.onSurface,
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Platform.isIOS
+                        ? CupertinoColors.label
+                        : Theme.of(context).colorScheme.onSurface,
+                  ),
                 ),
               ),
             ],

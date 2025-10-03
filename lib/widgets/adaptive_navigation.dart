@@ -27,11 +27,9 @@ class AdaptiveNavigationBar extends StatelessWidget {
     final deviceType = ResponsiveHelper.getDeviceType(context);
     final isLandscape = ResponsiveHelper.isLandscape(context);
 
-    if (Platform.isIOS) {
-      return _buildCupertinoNavigationBar(context, deviceType, isLandscape);
-    } else {
-      return _buildMaterialNavigationBar(context, deviceType, isLandscape);
-    }
+    return Platform.isIOS
+        ? _buildCupertinoNavigationBar(context, deviceType, isLandscape)
+        : _buildMaterialNavigationBar(context, deviceType, isLandscape);
   }
 
   Widget _buildCupertinoNavigationBar(
@@ -47,17 +45,20 @@ class AdaptiveNavigationBar extends StatelessWidget {
     return CupertinoTabBar(
       currentIndex: selectedIndex,
       onTap: onTap,
-      activeColor:
-          selectedItemColor ?? const Color(0xFFA68A38), // Sonbahar turuncu
+      activeColor: selectedItemColor ?? const Color(0xFFBF6836), // Yeni turuncu
       inactiveColor:
           unselectedItemColor ??
-          const Color(0xFFBFB38E), // Soft sonbahar kahverengi
+          const Color(0xFFBF6836).withOpacity(0.5), // %50 şeffaflık
       backgroundColor: backgroundColor ?? const Color(0xFFF2F2F2), // Soft grey
+      border: const Border(), // Çizgiyi kaldır
       items: items
           .map(
             (item) => BottomNavigationBarItem(
-              icon: Icon(item.icon),
-              activeIcon: Icon(item.activeIcon),
+              icon: Icon(item.icon, size: 28), // Daha büyük ikon
+              activeIcon: Icon(
+                item.activeIcon,
+                size: 30,
+              ), // Daha büyük aktif ikon
               label: _shouldShowLabels(deviceType, isLandscape)
                   ? item.label
                   : null,
@@ -78,25 +79,32 @@ class AdaptiveNavigationBar extends StatelessWidget {
     }
 
     return BottomNavigationBar(
-      type: _getNavigationBarType(deviceType),
+      type: BottomNavigationBarType.fixed, // Sabit yükseklik
       currentIndex: selectedIndex,
       onTap: onTap,
       selectedItemColor:
-          selectedItemColor ?? const Color(0xFFA68A38), // Sonbahar turuncu
+          selectedItemColor ?? const Color(0xFFBF6836), // Yeni turuncu
       unselectedItemColor:
           unselectedItemColor ??
-          const Color(0xFFBFB38E), // Soft sonbahar kahverengi
+          const Color(0xFFBF6836).withOpacity(0.5), // %50 şeffaflık
       selectedLabelStyle: TextStyle(
         fontWeight: FontWeight.w600,
-        fontSize: _getResponsiveFontSize(context, 12),
+        fontSize: _getResponsiveFontSize(context, 9),
+      ),
+      unselectedLabelStyle: TextStyle(
+        fontWeight: FontWeight.w500,
+        fontSize: _getResponsiveFontSize(context, 9),
       ),
       backgroundColor: backgroundColor ?? const Color(0xFFF2F2F2), // Soft grey
-      elevation: _getResponsiveElevation(deviceType),
+      elevation: 0, // Çizgiyi kaldırmak için elevation 0
       items: items
           .map(
             (item) => BottomNavigationBarItem(
-              icon: Icon(item.icon),
-              activeIcon: Icon(item.activeIcon),
+              icon: Icon(item.icon, size: 28), // Daha büyük ikon
+              activeIcon: Icon(
+                item.activeIcon,
+                size: 30,
+              ), // Daha büyük aktif ikon
               label: _shouldShowLabels(deviceType, isLandscape)
                   ? item.label
                   : null,
@@ -188,18 +196,6 @@ class AdaptiveNavigationBar extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  BottomNavigationBarType _getNavigationBarType(DeviceType deviceType) {
-    switch (deviceType) {
-      case DeviceType.mobile:
-        return BottomNavigationBarType.fixed;
-      case DeviceType.tablet:
-        return BottomNavigationBarType.fixed;
-      case DeviceType.desktop:
-      case DeviceType.largeDesktop:
-        return BottomNavigationBarType.fixed;
-    }
   }
 
   bool _shouldShowLabels(DeviceType deviceType, bool isLandscape) {
