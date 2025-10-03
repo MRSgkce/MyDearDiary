@@ -52,23 +52,25 @@ class InspirationTab extends ConsumerWidget {
       allInspirations.add(_InspirationItem.defaultQuote(quote));
     }
 
-    return PageView.builder(
-      scrollDirection: Axis.vertical,
-      physics: isCupertino
-          ? const BouncingScrollPhysics(parent: PageScrollPhysics())
-          : const PageScrollPhysics(),
-      itemCount: allInspirations.length,
-      itemBuilder: (context, index) {
-        final item = allInspirations[index];
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: _InspirationCard(
+    return SizedBox(
+      height:
+          MediaQuery.of(context).size.height -
+          200, // AppBar ve Navigation için alan bırak
+      child: PageView.builder(
+        scrollDirection: Axis.vertical,
+        physics: isCupertino
+            ? const BouncingScrollPhysics(parent: PageScrollPhysics())
+            : const PageScrollPhysics(),
+        itemCount: allInspirations.length,
+        itemBuilder: (context, index) {
+          final item = allInspirations[index];
+          return _InspirationCard(
             item: item,
             isCupertino: isCupertino,
             onDelete: item.isUser ? (id) => _deleteInspiration(ref, id) : null,
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 
@@ -144,62 +146,40 @@ class _InspirationCard extends StatelessWidget {
         return SizedBox(
           width: double.infinity,
           height: constraints.maxHeight,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              color: isCupertino
-                  ? CupertinoColors.systemBackground
-                  : Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: isCupertino
-                  ? [
-                      BoxShadow(
-                        color: CupertinoColors.black.withOpacity(0.05),
-                        blurRadius: 20,
-                        offset: const Offset(0, 12),
+          child: Container(
+            color: const Color(0xFFFEF7E7), // Sonbahar krem arka plan
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              children: [
+                const SizedBox(height: 24),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '"${item.text}"',
+                        textAlign: TextAlign.center,
+                        style: quoteStyle,
                       ),
-                    ]
-                  : [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.04),
-                        blurRadius: 24,
-                        offset: const Offset(0, 16),
+                      const SizedBox(height: 24),
+                      Text(
+                        '— ${item.author}',
+                        style: authorStyle,
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 32),
+                      _ActionRow(
+                        isCupertino: isCupertino,
+                        isUser: item.isUser,
+                        onDelete: item.isUser
+                            ? () => onDelete!(item.userInspiration!.id)
+                            : null,
                       ),
                     ],
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          '"${item.text}"',
-                          textAlign: TextAlign.center,
-                          style: quoteStyle,
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          '— ${item.author}',
-                          style: authorStyle,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 32),
-                        _ActionRow(
-                          isCupertino: isCupertino,
-                          isUser: item.isUser,
-                          onDelete: item.isUser
-                              ? () => onDelete!(item.userInspiration!.id)
-                              : null,
-                        ),
-                      ],
-                    ),
                   ),
-                  const SizedBox(height: 24),
-                ],
-              ),
+                ),
+                const SizedBox(height: 24),
+              ],
             ),
           ),
         );

@@ -1,5 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'platform_specific_widgets.dart';
 
 class MoodTab extends StatefulWidget {
   const MoodTab({super.key, this.isCupertino = false});
@@ -56,128 +58,126 @@ class _MoodTabState extends State<MoodTab> {
 
   @override
   Widget build(BuildContext context) {
-    return NotificationListener<SizeChangedLayoutNotification>(
-      onNotification: (_) {
-        setState(() {});
-        return true;
-      },
-      child: SizeChangedLayoutNotifier(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 32),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildSection(
-                title: 'Bugün Nasıl Hissediyorsun?',
-                icon: widget.isCupertino
-                    ? const Icon(
-                        CupertinoIcons.heart_fill,
-                        color: CupertinoColors.activeBlue,
-                      )
-                    : Icon(
-                        Icons.favorite,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 12,
-                      children: List.generate(_moods.length, (index) {
-                        final option = _moods[index];
-                        final bool isSelected = _selectedMoodIndex == index;
-                        return GestureDetector(
-                          onTap: () =>
-                              setState(() => _selectedMoodIndex = index),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 18,
-                              vertical: 16,
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildSection(
+            title: 'Bugün Nasıl Hissediyorsun?',
+            icon: Icon(
+              Platform.isIOS ? CupertinoIcons.heart_fill : Icons.favorite,
+              color: Platform.isIOS
+                  ? CupertinoColors.systemBlue
+                  : const Color(0xFFD2691E),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: List.generate(_moods.length, (index) {
+                    final option = _moods[index];
+                    final bool isSelected = _selectedMoodIndex == index;
+                    return GestureDetector(
+                      onTap: () => setState(() => _selectedMoodIndex = index),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 18,
+                          vertical: 16,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? (Platform.isIOS
+                                    ? CupertinoColors.systemBlue.withOpacity(
+                                        0.08,
+                                      )
+                                    : const Color(0xFFD2691E).withOpacity(0.08))
+                              : (Platform.isIOS
+                                    ? CupertinoColors.systemGrey6.withOpacity(
+                                        0.3,
+                                      )
+                                    : Colors.grey.shade50),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: isSelected
+                                ? (Platform.isIOS
+                                      ? CupertinoColors.systemBlue.withOpacity(
+                                          0.3,
+                                        )
+                                      : const Color(
+                                          0xFFD2691E,
+                                        ).withOpacity(0.3))
+                                : (Platform.isIOS
+                                      ? CupertinoColors.separator.withOpacity(
+                                          0.2,
+                                        )
+                                      : Colors.grey.shade200),
+                            width: isSelected ? 2 : 1,
+                          ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color:
+                                        (Platform.isIOS
+                                                ? CupertinoColors.systemBlue
+                                                : const Color(0xFFD2691E))
+                                            .withOpacity(0.1),
+                                    blurRadius: 12,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
+                              : null,
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              option.emoji,
+                              style: const TextStyle(fontSize: 26),
                             ),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? (widget.isCupertino
-                                        ? CupertinoColors.activeBlue
-                                              .withOpacity(0.12)
-                                        : Theme.of(context).colorScheme.primary
-                                              .withOpacity(0.1))
-                                  : (widget.isCupertino
-                                        ? CupertinoColors.systemBackground
-                                        : Theme.of(
-                                            context,
-                                          ).colorScheme.surface),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isSelected
-                                    ? (widget.isCupertino
-                                          ? CupertinoColors.activeBlue
-                                          : Theme.of(
-                                              context,
-                                            ).colorScheme.primary)
-                                    : (widget.isCupertino
-                                          ? CupertinoColors.separator
-                                          : Theme.of(
-                                              context,
-                                            ).dividerColor.withOpacity(0.3)),
+                            const SizedBox(height: 8),
+                            Text(
+                              option.label,
+                              style: TextStyle(
+                                fontWeight: FontWeight.w600,
+                                color: Platform.isIOS
+                                    ? CupertinoColors.label
+                                    : Colors.black87,
                               ),
                             ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  option.emoji,
-                                  style: const TextStyle(fontSize: 26),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  option.label,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    color: widget.isCupertino
-                                        ? CupertinoColors.label
-                                        : Theme.of(
-                                            context,
-                                          ).colorScheme.onSurface,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 24),
-                    _buildNoteField(context),
-                    const SizedBox(height: 16),
-                    _buildSaveButton(context),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildSection(
-                title: 'Günlük Olumlamalar',
-                icon: widget.isCupertino
-                    ? const Icon(
-                        CupertinoIcons.star_fill,
-                        color: CupertinoColors.activeOrange,
-                      )
-                    : Icon(
-                        Icons.star,
-                        color: Theme.of(context).colorScheme.secondary,
+                          ],
+                        ),
                       ),
-                child: Column(
-                  children: [
-                    _buildAffirmationInput(context),
-                    const SizedBox(height: 16),
-                    _buildAffirmationsList(context),
-                  ],
+                    );
+                  }),
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                _buildNoteField(context),
+                const SizedBox(height: 16),
+                _buildSaveButton(context),
+              ],
+            ),
           ),
-        ),
+          const SizedBox(height: 24),
+          _buildSection(
+            title: 'Günlük Olumlamalar',
+            icon: Icon(
+              Platform.isIOS ? CupertinoIcons.star_fill : Icons.star,
+              color: Platform.isIOS
+                  ? CupertinoColors.systemOrange
+                  : const Color(0xFFEA580C),
+            ),
+            child: Column(
+              children: [
+                _buildAffirmationInput(context),
+                const SizedBox(height: 16),
+                _buildAffirmationsList(context),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -187,114 +187,51 @@ class _MoodTabState extends State<MoodTab> {
     required Widget icon,
     required Widget child,
   }) {
-    final BorderRadius radius = BorderRadius.circular(20);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: widget.isCupertino
-              ? CupertinoColors.systemBackground
-              : Theme.of(context).colorScheme.surface,
-          borderRadius: radius,
-          border: widget.isCupertino
-              ? Border.all(color: CupertinoColors.separator)
-              : Border.all(
-                  color: Theme.of(context).dividerColor.withOpacity(0.1),
-                ),
-          boxShadow: [
-            BoxShadow(
-              color: widget.isCupertino
-                  ? CupertinoColors.black.withOpacity(0.02)
-                  : Colors.black.withOpacity(0.03),
-              blurRadius: 16,
-              offset: const Offset(0, 12),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return PlatformCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  icon,
-                  const SizedBox(width: 12),
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: widget.isCupertino
-                          ? CupertinoColors.label
-                          : Theme.of(context).colorScheme.onSurface,
-                    ),
-                  ),
-                ],
+              icon,
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: Platform.isIOS
+                      ? CupertinoColors.label
+                      : Theme.of(context).colorScheme.onSurface,
+                ),
               ),
-              const SizedBox(height: 20),
-              child,
             ],
           ),
-        ),
+          const SizedBox(height: 20),
+          child,
+        ],
       ),
     );
   }
 
   Widget _buildNoteField(BuildContext context) {
-    if (widget.isCupertino) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Not ekle (opsiyonel)',
-            style: TextStyle(
-              color: CupertinoColors.secondaryLabel,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 8),
-          CupertinoTextField(
-            controller: _noteController,
-            placeholder: 'Bugün neler yaşadın?',
-            minLines: 2,
-            maxLines: 4,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: CupertinoColors.systemGrey6,
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ],
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Not ekle (opsiyonel)',
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: Theme.of(context).colorScheme.outline,
+          style: TextStyle(
+            color: Platform.isIOS
+                ? CupertinoColors.secondaryLabel
+                : Colors.grey[600],
+            fontSize: 14,
           ),
         ),
         const SizedBox(height: 8),
-        TextField(
+        PlatformTextField(
+          placeholder: 'Bugün neler yaşadın?',
           controller: _noteController,
-          minLines: 2,
           maxLines: 4,
-          decoration: InputDecoration(
-            hintText: 'Bugün neler yaşadın?',
-            filled: true,
-            fillColor: Theme.of(
-              context,
-            ).colorScheme.surfaceVariant.withOpacity(0.3),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide.none,
-            ),
-          ),
         ),
       ],
     );
@@ -304,22 +241,10 @@ class _MoodTabState extends State<MoodTab> {
     final bool isDisabled =
         _selectedMoodIndex == null && _noteController.text.trim().isEmpty;
 
-    if (widget.isCupertino) {
-      return CupertinoButton.filled(
-        onPressed: isDisabled ? null : _onSaveMood,
-        child: const Text('Kaydet'),
-      );
-    }
-
-    return SizedBox(
-      width: double.infinity,
-      child: ElevatedButton(
-        onPressed: isDisabled ? null : _onSaveMood,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(vertical: 16),
-        ),
-        child: const Text('Kaydet'),
-      ),
+    return PlatformButton(
+      text: 'Kaydet',
+      onPressed: isDisabled ? null : _onSaveMood,
+      isFullWidth: true,
     );
   }
 
@@ -330,30 +255,18 @@ class _MoodTabState extends State<MoodTab> {
 
     final String moodLabel = _selectedMoodIndex != null
         ? _moods[_selectedMoodIndex!].label
-        : 'Not kaydedildi';
+        : 'Not Kaydedildi';
 
-    if (widget.isCupertino) {
-      showCupertinoDialog(
-        context: context,
-        builder: (context) => CupertinoAlertDialog(
-          title: const Text('Kaydedildi'),
-          content: Text('Bugünkü ruh halin "$moodLabel" olarak kaydedildi.'),
-          actions: [
-            CupertinoDialogAction(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Tamam'),
-            ),
-          ],
-        ),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Bugünkü ruh halin "$moodLabel" olarak kaydedildi.'),
-        ),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Ruh hali kaydedildi: $moodLabel'),
+        backgroundColor: Platform.isIOS
+            ? CupertinoColors.systemBlue
+            : const Color(0xFFD2691E),
+      ),
+    );
 
+    // Formu temizle
     setState(() {
       _selectedMoodIndex = null;
       _noteController.clear();
@@ -361,179 +274,147 @@ class _MoodTabState extends State<MoodTab> {
   }
 
   Widget _buildAffirmationInput(BuildContext context) {
-    final Color background = widget.isCupertino
-        ? CupertinoColors.systemGrey6
-        : Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.25);
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
           children: [
-            Text(
-              'Yeni Olumlama',
-              style: TextStyle(
-                fontWeight: FontWeight.w600,
-                color: widget.isCupertino
-                    ? CupertinoColors.label
-                    : Theme.of(context).colorScheme.onSurface,
+            Expanded(
+              child: PlatformTextField(
+                placeholder: 'Yeni olumlama ekle...',
+                controller: _affirmationController,
               ),
             ),
-            const SizedBox(height: 12),
-            if (widget.isCupertino)
-              CupertinoTextField(
-                controller: _affirmationController,
-                placeholder: 'Ben başarılı olmayı hak ediyorum',
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                decoration: BoxDecoration(
-                  color: CupertinoColors.systemBackground,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              )
-            else
-              TextField(
-                controller: _affirmationController,
-                decoration: InputDecoration(
-                  hintText: 'Ben başarılı olmayı hak ediyorum',
-                  filled: true,
-                  fillColor: Theme.of(context).colorScheme.background,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).dividerColor.withOpacity(0.1),
-                    ),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                ),
-              ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _buildCategorySelector(context)),
-                const SizedBox(width: 12),
-                _buildAddAffirmationButton(context),
-              ],
-            ),
+            const SizedBox(width: 12),
+            PlatformButton(text: 'Ekle', onPressed: _addAffirmation),
           ],
         ),
-      ),
+        const SizedBox(height: 12),
+        _buildCategorySelector(context),
+      ],
     );
   }
 
   Widget _buildCategorySelector(BuildContext context) {
-    if (widget.isCupertino) {
-      return CupertinoButton(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        color: CupertinoColors.systemBackground,
-        borderRadius: BorderRadius.circular(12),
-        onPressed: () async {
-          final selected = await showCupertinoModalPopup<String>(
-            context: context,
-            builder: (context) => _CategoryPickerSheet(
-              categories: _categories,
-              initialValue: _selectedCategory,
-            ),
-          );
-
-          if (selected != null && mounted) {
-            setState(() => _selectedCategory = selected);
-          }
-        },
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              _selectedCategory,
-              style: const TextStyle(color: CupertinoColors.label),
-            ),
-            const Icon(
-              CupertinoIcons.chevron_down,
-              size: 18,
-              color: CupertinoColors.systemGrey,
-            ),
-          ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Platform.isIOS
+            ? CupertinoColors.systemGrey6.withOpacity(0.3)
+            : Colors.grey.shade50,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Platform.isIOS
+              ? CupertinoColors.separator.withOpacity(0.2)
+              : Colors.grey.shade200,
+          width: 1,
         ),
-      );
-    }
-
-    return InputDecorator(
-      decoration: InputDecoration(
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 12,
-        ),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          isExpanded: true,
-          value: _selectedCategory,
-          items: _categories
-              .map(
-                (category) =>
-                    DropdownMenuItem(value: category, child: Text(category)),
-              )
-              .toList(),
-          onChanged: (value) {
-            if (value == null) return;
-            setState(() => _selectedCategory = value);
-          },
-        ),
+      child: Row(
+        children: [
+          Text(
+            'Kategori: ',
+            style: TextStyle(
+              color: Platform.isIOS
+                  ? CupertinoColors.secondaryLabel
+                  : Colors.grey[600],
+              fontSize: 14,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              _selectedCategory,
+              style: TextStyle(
+                color: Platform.isIOS ? CupertinoColors.label : Colors.black87,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          GestureDetector(
+            onTap: _showCategoryPicker,
+            child: Icon(
+              Platform.isIOS
+                  ? CupertinoIcons.chevron_down
+                  : Icons.arrow_drop_down,
+              color: Platform.isIOS
+                  ? CupertinoColors.systemBlue
+                  : const Color(0xFFD2691E),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildAddAffirmationButton(BuildContext context) {
-    final bool isDisabled = _affirmationController.text.trim().isEmpty;
-
-    if (widget.isCupertino) {
-      return CupertinoButton(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        color: isDisabled
-            ? CupertinoColors.systemGrey4
-            : CupertinoColors.activeBlue,
-        borderRadius: BorderRadius.circular(12),
-        onPressed: isDisabled ? null : _addAffirmation,
-        child: const Icon(CupertinoIcons.add, color: CupertinoColors.white),
-      );
-    }
-
-    return SizedBox(
-      height: 48,
-      child: ElevatedButton(
-        onPressed: isDisabled ? null : _addAffirmation,
-        style: ElevatedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 18),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+  void _showCategoryPicker() {
+    if (Platform.isIOS) {
+      showCupertinoModalPopup(
+        context: context,
+        builder: (context) => CupertinoActionSheet(
+          title: const Text('Kategori Seç'),
+          actions: _categories
+              .map(
+                (category) => CupertinoActionSheetAction(
+                  onPressed: () {
+                    setState(() => _selectedCategory = category);
+                    Navigator.pop(context);
+                  },
+                  isDefaultAction: category == _selectedCategory,
+                  child: Text(category),
+                ),
+              )
+              .toList(),
+          cancelButton: CupertinoActionSheetAction(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('İptal'),
           ),
         ),
-        child: const Icon(Icons.add),
-      ),
-    );
+      );
+    } else {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) => Container(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Kategori Seç',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey[800],
+                ),
+              ),
+              const SizedBox(height: 16),
+              ..._categories.map(
+                (category) => ListTile(
+                  title: Text(category),
+                  leading: category == _selectedCategory
+                      ? Icon(Icons.check, color: const Color(0xFFD2691E))
+                      : null,
+                  onTap: () {
+                    setState(() => _selectedCategory = category);
+                    Navigator.pop(context);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
   }
 
   void _addAffirmation() {
-    final text = _affirmationController.text.trim();
-    if (text.isEmpty) return;
+    if (_affirmationController.text.trim().isEmpty) return;
 
     setState(() {
-      _affirmations.insert(
-        0,
-        _Affirmation(text: text, category: _selectedCategory),
+      _affirmations.add(
+        _Affirmation(
+          text: _affirmationController.text.trim(),
+          category: _selectedCategory,
+        ),
       );
       _affirmationController.clear();
     });
@@ -541,153 +422,130 @@ class _MoodTabState extends State<MoodTab> {
 
   Widget _buildAffirmationsList(BuildContext context) {
     if (_affirmations.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 24),
+      return Container(
+        padding: const EdgeInsets.all(32),
         child: Text(
-          'Henüz olumlama eklenmedi.',
+          'Henüz olumlama eklenmemiş.\nYukarıdan yeni olumlama ekleyebilirsiniz.',
+          textAlign: TextAlign.center,
           style: TextStyle(
-            color: widget.isCupertino
+            color: Platform.isIOS
                 ? CupertinoColors.secondaryLabel
-                : Theme.of(context).colorScheme.outline,
+                : Colors.grey[600],
+            fontSize: 14,
           ),
         ),
       );
     }
 
-    return ListView.separated(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _affirmations.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        final affirmation = _affirmations[index];
-        return DecoratedBox(
+    return Column(
+      children: _affirmations.asMap().entries.map((entry) {
+        final index = entry.key;
+        final affirmation = entry.value;
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: widget.isCupertino
-                ? CupertinoColors.systemBackground
-                : Theme.of(context).colorScheme.background,
-            borderRadius: BorderRadius.circular(16),
-            border: widget.isCupertino
-                ? Border.all(color: CupertinoColors.separator)
-                : Border.all(
-                    color: Theme.of(context).dividerColor.withOpacity(0.1),
-                  ),
+            color: Platform.isIOS
+                ? CupertinoColors.systemGrey6.withOpacity(0.3)
+                : Colors.grey.shade50,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Platform.isIOS
+                  ? CupertinoColors.separator.withOpacity(0.2)
+                  : Colors.grey.shade200,
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Text(
-                        affirmation.text,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: widget.isCupertino
-                              ? CupertinoColors.label
-                              : Theme.of(context).colorScheme.onSurface,
-                        ),
+                    Text(
+                      affirmation.text,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Platform.isIOS
+                            ? CupertinoColors.label
+                            : Colors.black87,
                       ),
                     ),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        widget.isCupertino
-                            ? CupertinoButton(
-                                padding: EdgeInsets.zero,
-                                onPressed: () => _toggleFavorite(index),
-                                child: Icon(
-                                  affirmation.isFavorite
-                                      ? CupertinoIcons.star_fill
-                                      : CupertinoIcons.star,
-                                  color: affirmation.isFavorite
-                                      ? CupertinoColors.systemYellow
-                                      : CupertinoColors.systemGrey,
-                                  size: 22,
-                                ),
-                              )
-                            : IconButton(
-                                onPressed: () => _toggleFavorite(index),
-                                icon: Icon(
-                                  affirmation.isFavorite
-                                      ? Icons.star
-                                      : Icons.star_border,
-                                  color: affirmation.isFavorite
-                                      ? Colors.amber
-                                      : Theme.of(context).colorScheme.outline,
-                                ),
-                              ),
-                        widget.isCupertino
-                            ? CupertinoButton(
-                                padding: EdgeInsets.zero,
-                                onPressed: () => _removeAffirmation(index),
-                                child: const Icon(
-                                  CupertinoIcons.delete,
-                                  size: 22,
-                                  color: CupertinoColors.systemRed,
-                                ),
-                              )
-                            : IconButton(
-                                onPressed: () => _removeAffirmation(index),
-                                icon: const Icon(
-                                  Icons.delete_outline,
-                                  color: Colors.redAccent,
-                                ),
-                              ),
-                      ],
+                    const SizedBox(height: 4),
+                    Text(
+                      affirmation.category,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Platform.isIOS
+                            ? CupertinoColors.secondaryLabel
+                            : Colors.grey[600],
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: widget.isCupertino
-                          ? CupertinoColors.systemGrey5
-                          : Theme.of(
-                              context,
-                            ).colorScheme.primary.withOpacity(0.08),
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: Text(
-                      affirmation.category,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: widget.isCupertino
-                            ? CupertinoColors.secondaryLabel
-                            : Theme.of(context).colorScheme.primary,
-                      ),
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () => _toggleFavorite(index),
+                    child: Icon(
+                      affirmation.isFavorite
+                          ? (Platform.isIOS
+                                ? CupertinoIcons.heart_fill
+                                : Icons.favorite)
+                          : (Platform.isIOS
+                                ? CupertinoIcons.heart
+                                : Icons.favorite_border),
+                      color: affirmation.isFavorite
+                          ? (Platform.isIOS
+                                ? CupertinoColors.systemRed
+                                : Colors.red)
+                          : (Platform.isIOS
+                                ? CupertinoColors.secondaryLabel
+                                : Colors.grey),
+                      size: 20,
                     ),
                   ),
-                ),
-              ],
-            ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => _deleteAffirmation(index),
+                    child: Icon(
+                      Platform.isIOS
+                          ? CupertinoIcons.trash
+                          : Icons.delete_outline,
+                      color: Platform.isIOS
+                          ? CupertinoColors.systemRed
+                          : Colors.red,
+                      size: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
-      },
+      }).toList(),
     );
   }
 
   void _toggleFavorite(int index) {
     setState(() {
-      final affirmation = _affirmations[index];
-      _affirmations[index] = affirmation.copyWith(
-        isFavorite: !affirmation.isFavorite,
+      _affirmations[index] = _affirmations[index].copyWith(
+        isFavorite: !_affirmations[index].isFavorite,
       );
     });
   }
 
-  void _removeAffirmation(int index) {
+  void _deleteAffirmation(int index) {
     setState(() {
       _affirmations.removeAt(index);
     });
@@ -717,36 +575,6 @@ class _Affirmation {
       text: text ?? this.text,
       category: category ?? this.category,
       isFavorite: isFavorite ?? this.isFavorite,
-    );
-  }
-}
-
-class _CategoryPickerSheet extends StatelessWidget {
-  const _CategoryPickerSheet({
-    required this.categories,
-    required this.initialValue,
-  });
-
-  final List<String> categories;
-  final String initialValue;
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoActionSheet(
-      title: const Text('Kategori Seç'),
-      actions: [
-        for (final category in categories)
-          CupertinoActionSheetAction(
-            onPressed: () => Navigator.pop(context, category),
-            isDefaultAction: category == initialValue,
-            child: Text(category),
-          ),
-      ],
-      cancelButton: CupertinoActionSheetAction(
-        onPressed: () => Navigator.pop(context),
-        isDefaultAction: false,
-        child: const Text('Vazgeç'),
-      ),
     );
   }
 }

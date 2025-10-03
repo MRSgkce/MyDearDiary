@@ -12,7 +12,7 @@ class CustomAppBar extends StatelessWidget
   Widget build(BuildContext context) {
     if (Platform.isIOS) {
       return CupertinoNavigationBar(
-        backgroundColor: const Color(0xFFF2F2F2), // 242,242,242
+        backgroundColor: const Color(0xFFFEF7E7), // Sonbahar krem
         middle: const Text(
           'MyDearDiary',
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
@@ -45,7 +45,7 @@ class CustomAppBar extends StatelessWidget
       );
     } else {
       return AppBar(
-        backgroundColor: const Color(0xFFF2F2F2), // 242,242,242
+        backgroundColor: const Color(0xFFFEF7E7), // Sonbahar krem
         elevation: 0,
         title: const Text(
           'MyDearDiary',

@@ -5,11 +5,12 @@ import 'dart:io';
 import '../widgets/custom_app_bar.dart';
 import '../widgets/inspiration_tab.dart';
 import '../widgets/mood_tab.dart';
-import '../widgets/personalized_home_widgets.dart';
 import '../widgets/profile_tab.dart';
+import '../widgets/adaptive_layout.dart';
+import '../widgets/adaptive_navigation.dart';
+import '../utils/responsive_helper.dart';
 import '../providers/app_state_provider.dart';
 import '../providers/inspiration_provider.dart';
-import 'add_entry_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -17,232 +18,122 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = ref.watch(selectedTabIndexProvider);
-    final enabledWidgets = ref.watch(enabledWidgetsProvider);
 
-    if (Platform.isIOS) {
-      return _buildCupertinoLayout(context, ref, selectedIndex, enabledWidgets);
-    } else {
-      return _buildMaterialLayout(context, ref, selectedIndex, enabledWidgets);
-    }
-  }
-
-  Widget _buildMaterialLayout(
-    BuildContext context,
-    WidgetRef ref,
-    int selectedIndex,
-    List<String> enabledWidgets,
-  ) {
-    return Scaffold(
-      appBar: const CustomAppBar(),
-      body: SafeArea(
-        child: _buildMaterialBody(context, ref, selectedIndex, enabledWidgets),
-      ),
-      floatingActionButton: selectedIndex == 0
-          ? FloatingActionButton.extended(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const AddEntryScreen(),
-                  ),
-                );
-              },
-              icon: const Icon(Icons.add),
-              label: const Text('Yeni Giriş'),
-            )
-          : null,
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed,
-        currentIndex: selectedIndex,
-        onTap: (index) =>
-            ref.read(selectedTabIndexProvider.notifier).state = index,
-        selectedItemColor: const Color(0xFF6B46C1),
-        unselectedItemColor: Colors.grey,
-        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
-        backgroundColor: const Color(0xFFF2F2F2),
-        elevation: 8,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.book_outlined),
-            activeIcon: Icon(Icons.book),
-            label: 'Günlük',
+    return ResponsiveBuilder(
+      builder: (context, deviceType, deviceSize) {
+        return AdaptiveScaffold(
+          appBar: _buildAdaptiveAppBar(context, ref, selectedIndex),
+          body: _buildAdaptiveBody(context, ref, selectedIndex),
+          navigationBar: _buildAdaptiveNavigationBar(
+            context,
+            ref,
+            selectedIndex,
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.format_quote_outlined),
-            activeIcon: Icon(Icons.format_quote),
-            label: 'İlham',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_outline),
-            activeIcon: Icon(Icons.favorite),
-            label: 'Ruh Hali',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.self_improvement_outlined),
-            activeIcon: Icon(Icons.self_improvement),
-            label: 'Meditasyon',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            activeIcon: Icon(Icons.person),
-            label: 'Profil',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCupertinoLayout(
-    BuildContext context,
-    WidgetRef ref,
-    int selectedIndex,
-    List<String> enabledWidgets,
-  ) {
-    return CupertinoTabScaffold(
-      tabBar: CupertinoTabBar(
-        currentIndex: selectedIndex,
-        onTap: (index) =>
-            ref.read(selectedTabIndexProvider.notifier).state = index,
-        activeColor: const Color(0xFF6B46C1),
-        inactiveColor: CupertinoColors.inactiveGray,
-        backgroundColor: const Color(0xFFF2F2F2),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.book),
-            activeIcon: Icon(CupertinoIcons.book_fill),
-            label: 'Günlük',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.chat_bubble_2),
-            activeIcon: Icon(CupertinoIcons.chat_bubble_2_fill),
-            label: 'İlham',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.heart),
-            activeIcon: Icon(CupertinoIcons.heart_fill),
-            label: 'Ruh Hali',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.sparkles),
-            activeIcon: Icon(CupertinoIcons.sparkles),
-            label: 'Meditasyon',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(CupertinoIcons.person),
-            activeIcon: Icon(CupertinoIcons.person_fill),
-            label: 'Profil',
-          ),
-        ],
-      ),
-      tabBuilder: (context, index) {
-        if (index == 0) {
-          return CupertinoTabView(
-            builder: (context) => CupertinoPageScaffold(
-              navigationBar: const CustomAppBar(),
-              child: SafeArea(
-                bottom: false,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
-                  child: _buildDiaryContent(context, ref, enabledWidgets),
-                ),
-              ),
-            ),
-          );
-        }
-
-        return CupertinoTabView(
-          builder: (context) => CupertinoPageScaffold(
-            navigationBar: CustomAppBar(
-              onAddInspirationPressed: index == 1
-                  ? () => _showAddInspirationDialog(context, ref)
-                  : null,
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: index == 1
-                  ? const InspirationTab(isCupertino: true)
-                  : index == 2
-                  ? const MoodTab(isCupertino: true)
-                  : index == 3
-                  ? _buildComingSoonContent(
-                      title: 'Meditasyon',
-                      description: 'Meditasyon özellikleri yakında gelecek!',
-                      icon: CupertinoIcons.sparkles,
-                      isCupertino: true,
-                    )
-                  : ProfileTab(isCupertino: true),
-            ),
-          ),
+          navigationItems: _getNavigationItems(),
+          selectedIndex: selectedIndex,
+          onNavigationTap: (index) =>
+              ref.read(selectedTabIndexProvider.notifier).state = index,
+          floatingActionButton: null,
         );
       },
     );
   }
 
-  Widget _buildMaterialBody(
+  // Adaptif AppBar
+  Widget? _buildAdaptiveAppBar(
     BuildContext context,
     WidgetRef ref,
     int selectedIndex,
-    List<String> enabledWidgets,
   ) {
-    if (selectedIndex == 0) {
-      return RefreshIndicator(
-        onRefresh: () async {},
-        child: SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(16),
-          child: _buildDiaryContent(context, ref, enabledWidgets),
-        ),
-      );
+    final deviceType = ResponsiveHelper.getDeviceType(context);
+
+    if (deviceType == DeviceType.desktop ||
+        deviceType == DeviceType.largeDesktop) {
+      return null; // Desktop'ta sidebar kullanıyoruz
     }
 
-    return _buildTabContent(context, ref, selectedIndex);
+    return CustomAppBar(
+      onAddInspirationPressed: selectedIndex == 0
+          ? () => _showAddInspirationDialog(context, ref)
+          : null,
+    );
   }
 
-  Widget _buildTabContent(
+  // Adaptif Body
+  Widget _buildAdaptiveBody(
+    BuildContext context,
+    WidgetRef ref,
+    int selectedIndex,
+  ) {
+    return AdaptiveLayout(
+      scrollable: selectedIndex != 0, // İlham sekmesi için scrollable değil
+      child: _buildAdaptiveTabContent(context, ref, selectedIndex),
+    );
+  }
+
+  // Adaptif Navigation Bar
+  Widget _buildAdaptiveNavigationBar(
+    BuildContext context,
+    WidgetRef ref,
+    int selectedIndex,
+  ) {
+    return AdaptiveNavigationBar(
+      selectedIndex: selectedIndex,
+      onTap: (index) =>
+          ref.read(selectedTabIndexProvider.notifier).state = index,
+      items: _getNavigationItems(),
+    );
+  }
+
+  // Navigation Items
+  List<AdaptiveNavigationItem> _getNavigationItems() {
+    return const [
+      AdaptiveNavigationItem(
+        icon: Icons.format_quote_outlined,
+        activeIcon: Icons.format_quote,
+        label: 'İlham',
+      ),
+      AdaptiveNavigationItem(
+        icon: Icons.favorite_outline,
+        activeIcon: Icons.favorite,
+        label: 'Ruh Hali',
+      ),
+      AdaptiveNavigationItem(
+        icon: Icons.self_improvement_outlined,
+        activeIcon: Icons.self_improvement,
+        label: 'Meditasyon',
+      ),
+      AdaptiveNavigationItem(
+        icon: Icons.person_outline,
+        activeIcon: Icons.person,
+        label: 'Profil',
+      ),
+    ];
+  }
+
+  // Tab Content
+  Widget _buildAdaptiveTabContent(
     BuildContext context,
     WidgetRef ref,
     int selectedIndex,
   ) {
     switch (selectedIndex) {
-      case 1:
+      case 0:
         return const InspirationTab(isCupertino: false);
-      case 2:
+      case 1:
         return const MoodTab(isCupertino: false);
-      case 3:
+      case 2:
         return _buildComingSoonContent(
           title: 'Meditasyon',
           description: 'Meditasyon özellikleri yakında gelecek!',
           icon: Icons.self_improvement,
           isCupertino: false,
         );
-      case 4:
+      case 3:
         return const ProfileTab(isCupertino: false);
       default:
         return const SizedBox.shrink();
     }
-  }
-
-  Widget _buildDiaryContent(
-    BuildContext context,
-    WidgetRef ref,
-    List<String> enabledWidgets,
-  ) {
-    final availableWidgets = PersonalizedWidgetManager.availableWidgets;
-
-    return Column(
-      children: [
-        ...enabledWidgets.map((widgetName) {
-          final widget = availableWidgets.firstWhere(
-            (w) => w.title == widgetName,
-            orElse: () => throw Exception('Widget not found: $widgetName'),
-          );
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: widget.build(context, isCupertino: Platform.isIOS),
-          );
-        }).toList(),
-      ],
-    );
   }
 
   Widget _buildComingSoonContent({
@@ -268,19 +159,19 @@ class HomeScreen extends ConsumerWidget {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: isCupertino ? CupertinoColors.label : null,
+                color: isCupertino ? CupertinoColors.label : Colors.black87,
               ),
             ),
             const SizedBox(height: 12),
             Text(
               description,
-              textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
                 color: isCupertino
                     ? CupertinoColors.secondaryLabel
-                    : Colors.black54,
+                    : Colors.grey,
               ),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

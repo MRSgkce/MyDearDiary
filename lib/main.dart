@@ -21,9 +21,9 @@ class MyDearDiaryApp extends StatelessWidget {
       return CupertinoApp(
         title: 'MyDearDiary',
         theme: const CupertinoThemeData(
-          primaryColor: Color(0xFF6B46C1),
+          primaryColor: Color(0xFFD2691E), // Sonbahar turuncu
           brightness: Brightness.light,
-          scaffoldBackgroundColor: Color(0xFFF2F2F2), // 242,242,242
+          scaffoldBackgroundColor: Color(0xFFFEF7E7), // Sonbahar krem
         ),
         home: const HomeScreen(),
       );
@@ -32,11 +32,13 @@ class MyDearDiaryApp extends StatelessWidget {
         title: 'MyDearDiary',
         theme: ThemeData(
           colorScheme: ColorScheme.fromSeed(
-            seedColor: const Color(0xFF6B46C1), // Mor ton
+            seedColor: const Color(0xFFD2691E), // Sonbahar turuncu
             brightness: Brightness.light,
           ),
           useMaterial3: true,
-          scaffoldBackgroundColor: const Color(0xFFF2F2F2), // 242,242,242
+          scaffoldBackgroundColor: const Color(
+            0xFFFEF7E7,
+          ), // Soft krem/sonbahar bej
           fontFamily: 'Inter',
           textTheme: const TextTheme(
             displayLarge: TextStyle(fontFamily: 'Inter'),
@@ -58,12 +60,12 @@ class MyDearDiaryApp extends StatelessWidget {
           appBarTheme: const AppBarTheme(
             centerTitle: true,
             elevation: 0,
-            backgroundColor: Color(0xFFF2F2F2),
+            backgroundColor: Color(0xFFFEF7E7), // Sonbahar krem
           ),
           cardTheme: CardThemeData(
-            elevation: 2,
+            elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(20),
             ),
           ),
         ),
