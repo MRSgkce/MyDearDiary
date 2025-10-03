@@ -78,7 +78,7 @@ class PlatformButton extends PlatformSpecificWidget {
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
         backgroundColor:
-            backgroundColor ?? const Color(0xFFD2691E), // Sonbahar turuncu
+            backgroundColor ?? const Color(0xFFA68A38), // Sonbahar turuncu
         foregroundColor: textColor ?? Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
@@ -265,7 +265,7 @@ class PlatformTextField extends PlatformSpecificWidget {
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(
-            color: Color(0xFFD2691E),
+            color: Color(0xFFA68A38),
             width: 2,
           ), // Sonbahar turuncu
         ),
@@ -299,7 +299,7 @@ class PlatformSwitch extends PlatformSpecificWidget {
     return Switch(
       value: value,
       onChanged: onChanged,
-      activeColor: const Color(0xFFD2691E), // Sonbahar turuncu
+      activeColor: const Color(0xFFA68A38), // Sonbahar turuncu
     );
   }
 }

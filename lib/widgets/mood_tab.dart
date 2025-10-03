@@ -69,7 +69,7 @@ class _MoodTabState extends State<MoodTab> {
               Platform.isIOS ? CupertinoIcons.heart_fill : Icons.favorite,
               color: Platform.isIOS
                   ? CupertinoColors.systemBlue
-                  : const Color(0xFFD2691E),
+                  : const Color(0xFFA68A38),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -93,7 +93,7 @@ class _MoodTabState extends State<MoodTab> {
                                     ? CupertinoColors.systemBlue.withOpacity(
                                         0.08,
                                       )
-                                    : const Color(0xFFD2691E).withOpacity(0.08))
+                                    : const Color(0xFFA68A38).withOpacity(0.08))
                               : (Platform.isIOS
                                     ? CupertinoColors.systemGrey6.withOpacity(
                                         0.3,
@@ -107,7 +107,7 @@ class _MoodTabState extends State<MoodTab> {
                                           0.3,
                                         )
                                       : const Color(
-                                          0xFFD2691E,
+                                          0xFFA68A38,
                                         ).withOpacity(0.3))
                                 : (Platform.isIOS
                                       ? CupertinoColors.separator.withOpacity(
@@ -122,7 +122,7 @@ class _MoodTabState extends State<MoodTab> {
                                     color:
                                         (Platform.isIOS
                                                 ? CupertinoColors.systemBlue
-                                                : const Color(0xFFD2691E))
+                                                : const Color(0xFFA68A38))
                                             .withOpacity(0.1),
                                     blurRadius: 12,
                                     offset: const Offset(0, 4),
@@ -262,7 +262,7 @@ class _MoodTabState extends State<MoodTab> {
         content: Text('Ruh hali kaydedildi: $moodLabel'),
         backgroundColor: Platform.isIOS
             ? CupertinoColors.systemBlue
-            : const Color(0xFFD2691E),
+            : const Color(0xFFA68A38),
       ),
     );
 
@@ -338,7 +338,7 @@ class _MoodTabState extends State<MoodTab> {
                   : Icons.arrow_drop_down,
               color: Platform.isIOS
                   ? CupertinoColors.systemBlue
-                  : const Color(0xFFD2691E),
+                  : const Color(0xFFA68A38),
             ),
           ),
         ],
@@ -391,7 +391,7 @@ class _MoodTabState extends State<MoodTab> {
                 (category) => ListTile(
                   title: Text(category),
                   leading: category == _selectedCategory
-                      ? Icon(Icons.check, color: const Color(0xFFD2691E))
+                      ? Icon(Icons.check, color: const Color(0xFFA68A38))
                       : null,
                   onTap: () {
                     setState(() => _selectedCategory = category);

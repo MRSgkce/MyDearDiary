@@ -12,7 +12,7 @@ class CustomAppBar extends StatelessWidget
   Widget build(BuildContext context) {
     if (Platform.isIOS) {
       return CupertinoNavigationBar(
-        backgroundColor: const Color(0xFFFEF7E7), // Sonbahar krem
+        backgroundColor: const Color(0xFFF2F2F2), // Soft grey
         middle: const Text(
           'MyDearDiary',
           style: TextStyle(fontWeight: FontWeight.w600, fontSize: 18),
@@ -27,7 +27,7 @@ class CustomAppBar extends StatelessWidget
                     Icon(
                       CupertinoIcons.lightbulb,
                       size: 14,
-                      color: CupertinoColors.systemYellow,
+                      color: const Color(0xFFD9AD5B), // Coral pink
                     ),
                     SizedBox(width: 4),
                     Text(
@@ -45,7 +45,7 @@ class CustomAppBar extends StatelessWidget
       );
     } else {
       return AppBar(
-        backgroundColor: const Color(0xFFFEF7E7), // Sonbahar krem
+        backgroundColor: const Color(0xFFF2F2F2), // Soft grey
         elevation: 0,
         title: const Text(
           'MyDearDiary',
@@ -63,7 +63,7 @@ class CustomAppBar extends StatelessWidget
                   icon: const Icon(
                     Icons.lightbulb_outline,
                     size: 16,
-                    color: Color(0xFF6B46C1),
+                    color: const Color(0xFFD9AD5B), // Coral pink
                   ),
                   label: const Text(
                     'Yeni İlham Ekle',

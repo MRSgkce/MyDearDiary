@@ -147,7 +147,7 @@ class _InspirationCard extends StatelessWidget {
           width: double.infinity,
           height: constraints.maxHeight,
           child: Container(
-            color: const Color(0xFFFEF7E7), // Sonbahar krem arka plan
+            color: const Color(0xFFF2F2F2), // Soft grey arka plan
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
             child: Column(
               children: [

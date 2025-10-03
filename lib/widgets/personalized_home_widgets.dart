@@ -35,7 +35,7 @@ class DailyMotivationWidget extends PersonalizedWidget {
                 icon,
                 color: Platform.isIOS
                     ? CupertinoColors.systemBlue
-                    : const Color(0xFFD2691E),
+                    : const Color(0xFFA68A38),
                 size: 24,
               ),
               const SizedBox(width: 12),
@@ -155,7 +155,7 @@ class QuickStatsWidget extends PersonalizedWidget {
             size: 20,
             color: Platform.isIOS
                 ? CupertinoColors.systemBlue
-                : const Color(0xFFD2691E),
+                : const Color(0xFFA68A38),
           ),
           const SizedBox(height: 8),
           Text(

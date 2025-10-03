@@ -48,12 +48,11 @@ class AdaptiveNavigationBar extends StatelessWidget {
       currentIndex: selectedIndex,
       onTap: onTap,
       activeColor:
-          selectedItemColor ?? const Color(0xFFD2691E), // Sonbahar turuncu
+          selectedItemColor ?? const Color(0xFFA68A38), // Sonbahar turuncu
       inactiveColor:
           unselectedItemColor ??
-          const Color(0xFF8B7355), // Soft sonbahar kahverengi
-      backgroundColor:
-          backgroundColor ?? const Color(0xFFFEF7E7), // Sonbahar krem
+          const Color(0xFFBFB38E), // Soft sonbahar kahverengi
+      backgroundColor: backgroundColor ?? const Color(0xFFF2F2F2), // Soft grey
       items: items
           .map(
             (item) => BottomNavigationBarItem(
@@ -83,16 +82,15 @@ class AdaptiveNavigationBar extends StatelessWidget {
       currentIndex: selectedIndex,
       onTap: onTap,
       selectedItemColor:
-          selectedItemColor ?? const Color(0xFFD2691E), // Sonbahar turuncu
+          selectedItemColor ?? const Color(0xFFA68A38), // Sonbahar turuncu
       unselectedItemColor:
           unselectedItemColor ??
-          const Color(0xFF8B7355), // Soft sonbahar kahverengi
+          const Color(0xFFBFB38E), // Soft sonbahar kahverengi
       selectedLabelStyle: TextStyle(
         fontWeight: FontWeight.w600,
         fontSize: _getResponsiveFontSize(context, 12),
       ),
-      backgroundColor:
-          backgroundColor ?? const Color(0xFFFEF7E7), // Sonbahar krem
+      backgroundColor: backgroundColor ?? const Color(0xFFF2F2F2), // Soft grey
       elevation: _getResponsiveElevation(deviceType),
       items: items
           .map(
