@@ -179,6 +179,22 @@ class HomeScreen extends ConsumerWidget {
     );
   }
 
+  void _showSuccessDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Başarılı! ✨'),
+        content: const Text('İlhamınız başarıyla kaydedildi!'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tamam'),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddInspirationDialog(BuildContext context, WidgetRef ref) {
     final TextEditingController inspirationController = TextEditingController();
     final TextEditingController authorController = TextEditingController();
@@ -224,11 +240,8 @@ class HomeScreen extends ConsumerWidget {
                                 : null,
                           );
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('İlham başarıyla kaydedildi! ✨'),
-                        ),
-                      );
+                      // Başarı mesajı göster
+                      _showSuccessDialog(context);
                     }
                   },
                 ),
@@ -278,11 +291,8 @@ class HomeScreen extends ConsumerWidget {
                                 : null,
                           );
                       Navigator.pop(context);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('İlham başarıyla kaydedildi! ✨'),
-                        ),
-                      );
+                      // Başarı mesajı göster
+                      _showSuccessDialog(context);
                     }
                   },
                   child: const Text('Kaydet'),

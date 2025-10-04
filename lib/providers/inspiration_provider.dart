@@ -1,22 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/inspiration_service.dart';
 
-// InspirationService provider
-final inspirationServiceProvider = Provider<InspirationService>((ref) {
-  return InspirationService();
-});
+// InspirationService provider - Static metodlar kullandığımız için gerekli değil
+// final inspirationServiceProvider = Provider<InspirationService>((ref) {
+//   return InspirationService();
+// });
 
 // Inspirations listesi provider
 final inspirationsProvider =
     StateNotifierProvider<InspirationsNotifier, List<InspirationEntry>>((ref) {
-      return InspirationsNotifier(ref.read(inspirationServiceProvider));
+      return InspirationsNotifier();
     });
 
 // InspirationsNotifier
 class InspirationsNotifier extends StateNotifier<List<InspirationEntry>> {
-  final InspirationService _inspirationService;
-
-  InspirationsNotifier(this._inspirationService) : super([]) {
+  InspirationsNotifier() : super([]) {
     loadInspirations();
   }
 

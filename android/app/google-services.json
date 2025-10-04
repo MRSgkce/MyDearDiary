@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "265679041084",
+    "project_id": "auth1-77587",
+    "storage_bucket": "auth1-77587.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:265679041084:android:3e713f6fbc5de958408939",
+        "android_client_info": {
+          "package_name": "com.example.mydeardiary"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbJo5PNMGIuXVTC9WxXXdXi99uwYvQ27A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
