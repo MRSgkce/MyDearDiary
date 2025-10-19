@@ -42,29 +42,66 @@ class AdaptiveNavigationBar extends StatelessWidget {
       return _buildDesktopSidebar(context);
     }
 
-    return CupertinoTabBar(
-      currentIndex: selectedIndex,
-      onTap: onTap,
-      activeColor: selectedItemColor ?? const Color(0xFFBF6836), // Yeni turuncu
-      inactiveColor:
-          unselectedItemColor ??
-          const Color(0xFFBF6836).withOpacity(0.5), // %50 şeffaflık
-      backgroundColor: backgroundColor ?? const Color(0xFFF2F2F2), // Soft grey
-      border: const Border(), // Çizgiyi kaldır
-      items: items
-          .map(
-            (item) => BottomNavigationBarItem(
-              icon: Icon(item.icon, size: 28), // Daha büyük ikon
-              activeIcon: Icon(
-                item.activeIcon,
-                size: 30,
-              ), // Daha büyük aktif ikon
-              label: _shouldShowLabels(deviceType, isLandscape)
-                  ? item.label
-                  : null,
+    return Container(
+      height: 60,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? Colors.white, // ✅ Sade beyaz arka plan
+        borderRadius: BorderRadius.zero, // Tamamen düz köşeler
+        // ✅ Tam ekran için gölge efekti
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: items.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          final isSelected = selectedIndex == index;
+          
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onTap(index),
+              child: Container(
+                height: 60,
+                decoration: BoxDecoration(
+                  color: isSelected 
+                      ? const Color(0xFFF5F5F5) // ✅ Açık gri seçili arka plan
+                      : Colors.transparent,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isSelected ? item.activeIcon : item.icon,
+                      size: isSelected ? 22 : 20,
+                      color: isSelected 
+                          ? Colors.black87 // ✅ Sade siyah
+                          : Colors.grey, // ✅ Sade gri
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.label,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected 
+                            ? Colors.black87 // ✅ Sade siyah
+                            : Colors.grey, // ✅ Sade gri
+                        height: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          )
-          .toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -78,39 +115,66 @@ class AdaptiveNavigationBar extends StatelessWidget {
       return _buildDesktopSidebar(context);
     }
 
-    return BottomNavigationBar(
-      type: BottomNavigationBarType.fixed, // Sabit yükseklik
-      currentIndex: selectedIndex,
-      onTap: onTap,
-      selectedItemColor:
-          selectedItemColor ?? const Color(0xFFBF6836), // Yeni turuncu
-      unselectedItemColor:
-          unselectedItemColor ??
-          const Color(0xFFBF6836).withOpacity(0.5), // %50 şeffaflık
-      selectedLabelStyle: TextStyle(
-        fontWeight: FontWeight.w600,
-        fontSize: _getResponsiveFontSize(context, 9),
+    return Container(
+      height: 60,
+      decoration: BoxDecoration(
+        color: backgroundColor ?? Colors.white, // ✅ Sade beyaz arka plan
+        borderRadius: BorderRadius.zero, // Tamamen düz köşeler
+        // ✅ Tam ekran için gölge efekti
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
-      unselectedLabelStyle: TextStyle(
-        fontWeight: FontWeight.w500,
-        fontSize: _getResponsiveFontSize(context, 9),
-      ),
-      backgroundColor: backgroundColor ?? const Color(0xFFF2F2F2), // Soft grey
-      elevation: 0, // Çizgiyi kaldırmak için elevation 0
-      items: items
-          .map(
-            (item) => BottomNavigationBarItem(
-              icon: Icon(item.icon, size: 28), // Daha büyük ikon
-              activeIcon: Icon(
-                item.activeIcon,
-                size: 30,
-              ), // Daha büyük aktif ikon
-              label: _shouldShowLabels(deviceType, isLandscape)
-                  ? item.label
-                  : null,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: items.asMap().entries.map((entry) {
+          final index = entry.key;
+          final item = entry.value;
+          final isSelected = selectedIndex == index;
+          
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => onTap(index),
+              child: Container(
+                height: 60,
+                decoration: BoxDecoration(
+                  color: isSelected 
+                      ? const Color(0xFFF5F5F5) // ✅ Açık gri seçili arka plan
+                      : Colors.transparent,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      isSelected ? item.activeIcon : item.icon,
+                      size: isSelected ? 22 : 20,
+                      color: isSelected 
+                          ? Colors.black87 // ✅ Sade siyah
+                          : Colors.grey, // ✅ Sade gri
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.label,
+                      style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                        color: isSelected 
+                            ? Colors.black87 // ✅ Sade siyah
+                            : Colors.grey, // ✅ Sade gri
+                        height: 1.0,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
-          )
-          .toList(),
+          );
+        }).toList(),
+      ),
     );
   }
 
@@ -214,26 +278,6 @@ class AdaptiveNavigationBar extends StatelessWidget {
     }
   }
 
-  double _getResponsiveElevation(DeviceType deviceType) {
-    switch (deviceType) {
-      case DeviceType.mobile:
-        return 8;
-      case DeviceType.tablet:
-        return 12;
-      case DeviceType.desktop:
-      case DeviceType.largeDesktop:
-        return 16;
-    }
-  }
-
-  double _getResponsiveFontSize(BuildContext context, double baseSize) {
-    return ResponsiveHelper.responsiveFontSize(
-      context,
-      mobile: baseSize,
-      tablet: baseSize * 1.1,
-      desktop: baseSize * 1.2,
-    );
-  }
 }
 
 /// Navigation item model

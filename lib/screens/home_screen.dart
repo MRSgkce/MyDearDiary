@@ -8,6 +8,7 @@ import '../widgets/mood_tab.dart';
 import '../widgets/profile_tab.dart';
 import '../widgets/adaptive_layout.dart';
 import '../widgets/adaptive_navigation.dart';
+import '../widgets/fullscreen_wrapper.dart'; // ✅ Tam ekran wrapper
 import '../utils/responsive_helper.dart';
 import '../providers/app_state_provider.dart';
 import '../providers/inspiration_provider.dart';
@@ -19,23 +20,28 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = ref.watch(selectedTabIndexProvider);
 
-    return ResponsiveBuilder(
-      builder: (context, deviceType, deviceSize) {
-        return AdaptiveScaffold(
-          appBar: _buildAdaptiveAppBar(context, ref, selectedIndex),
-          body: _buildAdaptiveBody(context, ref, selectedIndex),
-          navigationBar: _buildAdaptiveNavigationBar(
-            context,
-            ref,
-            selectedIndex,
-          ),
-          navigationItems: _getNavigationItems(),
-          selectedIndex: selectedIndex,
-          onNavigationTap: (index) =>
-              ref.read(selectedTabIndexProvider.notifier).state = index,
-          floatingActionButton: null,
-        );
-      },
+    // ✅ Tam ekran wrapper ile sar
+    return FullScreenWrapper(
+      hideStatusBar: true, // ✅ Status bar'ı gizle
+      hideNavigationBar: true,
+      child: ResponsiveBuilder(
+        builder: (context, deviceType, deviceSize) {
+          return AdaptiveScaffold(
+            appBar: _buildAdaptiveAppBar(context, ref, selectedIndex),
+            body: _buildAdaptiveBody(context, ref, selectedIndex),
+            navigationBar: _buildAdaptiveNavigationBar(
+              context,
+              ref,
+              selectedIndex,
+            ),
+            navigationItems: _getNavigationItems(),
+            selectedIndex: selectedIndex,
+            onNavigationTap: (index) =>
+                ref.read(selectedTabIndexProvider.notifier).state = index,
+            floatingActionButton: null,
+          );
+        },
+      ),
     );
   }
 

@@ -2,6 +2,23 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'dart:io';
 import 'platform_specific_widgets.dart';
+import 'adaptive_layout.dart';
+import 'mood_widgets.dart'; // ✅ Modüler widget'larımız
+import '../utils/responsive_helper.dart';
+
+/// ✨ ADAPTIVE MOOD TAB
+/// 
+/// ÖNCEKİ SORUNLAR:
+/// ❌ Manuel platform kontrolleri
+/// ❌ Sabit padding ve boyutlar
+/// ❌ Tekrar eden kod
+/// ❌ Wrap kullanımı (responsive değil)
+///
+/// YENİ ÖZELLİKLER:
+/// ✅ AdaptiveLayout ile responsive
+/// ✅ AdaptiveGrid ile otomatik kolon sayısı
+/// ✅ Modüler widget'larla temiz kod
+/// ✅ ResponsiveHelper ile dinamik boyutlar
 
 class MoodTab extends StatefulWidget {
   const MoodTab({super.key, this.isCupertino = false});
@@ -58,164 +75,157 @@ class _MoodTabState extends State<MoodTab> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildSection(
-            title: 'Bugün Nasıl Hissediyorsun?',
-            icon: Icon(
-              Platform.isIOS ? CupertinoIcons.heart_fill : Icons.favorite,
-              color: Platform.isIOS
-                  ? CupertinoColors.systemBlue
-                  : const Color(0xFFA68A38),
+    // ✅ ÖĞRENİN: AdaptiveLayout kullanımı
+    // Otomatik responsive padding ve scrolling ekler
+    return Container(
+      width: double.infinity,
+      height: double.infinity,
+      color: Colors.white, // ✅ Sade beyaz arka plan
+      child: AdaptiveLayout(
+        scrollable: true, // Otomatik scroll
+        useSafeArea: true, // Safe area padding
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Ruh Hali Seçme Bölümü
+            _buildMoodSection(context),
+            
+            // Responsive spacing - cihaza göre
+            SizedBox(
+              height: ResponsiveHelper.responsive(
+                context,
+                mobile: 24.0,
+                tablet: 32.0,
+                desktop: 40.0,
+              ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 12,
-                  children: List.generate(_moods.length, (index) {
-                    final option = _moods[index];
-                    final bool isSelected = _selectedMoodIndex == index;
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedMoodIndex = index),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 18,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isSelected
-                              ? (Platform.isIOS
-                                    ? CupertinoColors.systemBlue.withOpacity(
-                                        0.08,
-                                      )
-                                    : const Color(0xFFA68A38).withOpacity(0.08))
-                              : (Platform.isIOS
-                                    ? CupertinoColors.systemGrey6.withOpacity(
-                                        0.3,
-                                      )
-                                    : Colors.grey.shade50),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: isSelected
-                                ? (Platform.isIOS
-                                      ? CupertinoColors.systemBlue.withOpacity(
-                                          0.3,
-                                        )
-                                      : const Color(
-                                          0xFFA68A38,
-                                        ).withOpacity(0.3))
-                                : (Platform.isIOS
-                                      ? CupertinoColors.separator.withOpacity(
-                                          0.2,
-                                        )
-                                      : Colors.grey.shade200),
-                            width: isSelected ? 2 : 1,
-                          ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color:
-                                        (Platform.isIOS
-                                                ? CupertinoColors.systemBlue
-                                                : const Color(0xFFA68A38))
-                                            .withOpacity(0.1),
-                                    blurRadius: 12,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ]
-                              : null,
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              option.emoji,
-                              style: const TextStyle(fontSize: 26),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              option.label,
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: Platform.isIOS
-                                    ? CupertinoColors.label
-                                    : Colors.black87,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-                const SizedBox(height: 24),
-                _buildNoteField(context),
-                const SizedBox(height: 16),
-                _buildSaveButton(context),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          _buildSection(
-            title: 'Günlük Olumlamalar',
-            icon: Icon(
-              Platform.isIOS ? CupertinoIcons.star_fill : Icons.star,
-              color: Platform.isIOS
-                  ? CupertinoColors.systemOrange
-                  : const Color(0xFFEA580C),
-            ),
-            child: Column(
-              children: [
-                _buildAffirmationInput(context),
-                const SizedBox(height: 16),
-                _buildAffirmationsList(context),
-              ],
-            ),
-          ),
-        ],
+            
+            // Olumlamalar Bölümü
+            _buildAffirmationsSection(context),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildSection({
-    required String title,
-    required Widget icon,
-    required Widget child,
-  }) {
-    return PlatformCard(
+  /// ✅ ÖĞRENİN: Bölüm Widget'ı
+  /// Tam sayfa container + SectionHeader kullanımı
+  Widget _buildMoodSection(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: ResponsiveHelper.responsivePadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              icon,
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Platform.isIOS
-                        ? CupertinoColors.label
-                        : Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-              ),
-            ],
+          // ✅ Modüler başlık widget'ı
+          SectionHeader(
+            title: 'Bugün Nasıl Hissediyorsun?',
+            icon: Platform.isIOS ? CupertinoIcons.heart_fill : Icons.favorite,
           ),
-          const SizedBox(height: 20),
-          child,
+          
+          // Responsive spacing
+          SizedBox(
+            height: ResponsiveHelper.responsive(
+              context,
+              mobile: 20.0,
+              tablet: 24.0,
+              desktop: 28.0,
+            ),
+          ),
+          
+          // ✅ ÖĞRENİN: AdaptiveGrid kullanımı
+          // Mobil: 2 kolon, Tablet: 3 kolon, Desktop: 5 kolon
+          AdaptiveGrid(
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            maxColumns: 5, // Max 5 kolon (5 ruh hali var)
+            childAspectRatio: 1.0, // Kare şekil
+            children: List.generate(_moods.length, (index) {
+              final mood = _moods[index];
+              // ✅ Modüler MoodOptionCard widget'ı
+              return MoodOptionCard(
+                emoji: mood.emoji,
+                label: mood.label,
+                isSelected: _selectedMoodIndex == index,
+                onTap: () => setState(() => _selectedMoodIndex = index),
+              );
+            }),
+          ),
+          
+          SizedBox(
+            height: ResponsiveHelper.responsive(
+              context,
+              mobile: 24.0,
+              tablet: 28.0,
+              desktop: 32.0,
+            ),
+          ),
+          
+          // Not alanı
+          _buildNoteField(context),
+          
+          SizedBox(
+            height: ResponsiveHelper.responsive(
+              context,
+              mobile: 16.0,
+              tablet: 20.0,
+              desktop: 24.0,
+            ),
+          ),
+          
+          // Kaydet butonu
+          _buildSaveButton(context),
         ],
       ),
     );
   }
 
+  /// Olumlamalar Bölümü
+  Widget _buildAffirmationsSection(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: ResponsiveHelper.responsivePadding(context),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ✅ Modüler başlık
+          SectionHeader(
+            title: 'Günlük Olumlamalar',
+            icon: Platform.isIOS ? CupertinoIcons.star_fill : Icons.star,
+            iconColor: Platform.isIOS
+                ? CupertinoColors.systemOrange
+                : const Color(0xFFEA580C),
+          ),
+          
+          SizedBox(
+            height: ResponsiveHelper.responsive(
+              context,
+              mobile: 20.0,
+              tablet: 24.0,
+              desktop: 28.0,
+            ),
+          ),
+          
+          // Olumlama ekleme alanı
+          _buildAffirmationInput(context),
+          
+          SizedBox(
+            height: ResponsiveHelper.responsive(
+              context,
+              mobile: 16.0,
+              tablet: 20.0,
+              desktop: 24.0,
+            ),
+          ),
+          
+          // Olumlamalar listesi
+          _buildAffirmationsList(context),
+        ],
+      ),
+    );
+  }
+
+  /// Not girişi
   Widget _buildNoteField(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -226,10 +236,23 @@ class _MoodTabState extends State<MoodTab> {
             color: Platform.isIOS
                 ? CupertinoColors.secondaryLabel
                 : Colors.grey[600],
-            fontSize: 14,
+            fontSize: ResponsiveHelper.responsiveFontSize(
+              context,
+              mobile: 14,
+              tablet: 15,
+              desktop: 16,
+            ),
           ),
         ),
-        const SizedBox(height: 8),
+        SizedBox(
+          height: ResponsiveHelper.responsive(
+            context,
+            mobile: 8.0,
+            tablet: 10.0,
+            desktop: 12.0,
+          ),
+        ),
+        // ✅ Platform-specific TextField
         PlatformTextField(
           placeholder: 'Bugün neler yaşadın?',
           controller: _noteController,
@@ -239,10 +262,12 @@ class _MoodTabState extends State<MoodTab> {
     );
   }
 
+  /// Kaydet butonu
   Widget _buildSaveButton(BuildContext context) {
     final bool isDisabled =
         _selectedMoodIndex == null && _noteController.text.trim().isEmpty;
 
+    // ✅ Platform-specific Button
     return PlatformButton(
       text: 'Kaydet',
       onPressed: isDisabled ? null : _onSaveMood,
@@ -250,6 +275,7 @@ class _MoodTabState extends State<MoodTab> {
     );
   }
 
+  /// Ruh halini kaydet
   void _onSaveMood() {
     if (_selectedMoodIndex == null && _noteController.text.trim().isEmpty) {
       return;
@@ -275,6 +301,7 @@ class _MoodTabState extends State<MoodTab> {
     });
   }
 
+  /// Olumlama girişi
   Widget _buildAffirmationInput(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -287,67 +314,39 @@ class _MoodTabState extends State<MoodTab> {
                 controller: _affirmationController,
               ),
             ),
-            const SizedBox(width: 12),
-            PlatformButton(text: 'Ekle', onPressed: _addAffirmation),
+            SizedBox(
+              width: ResponsiveHelper.responsive(
+                context,
+                mobile: 12.0,
+                tablet: 16.0,
+                desktop: 20.0,
+              ),
+            ),
+            // Platform-specific buton
+            PlatformButton(
+              text: 'Ekle',
+              onPressed: _addAffirmation,
+            ),
           ],
         ),
-        const SizedBox(height: 12),
-        _buildCategorySelector(context),
+        SizedBox(
+          height: ResponsiveHelper.responsive(
+            context,
+            mobile: 12.0,
+            tablet: 16.0,
+            desktop: 20.0,
+          ),
+        ),
+        // ✅ Modüler kategori seçici
+        CategorySelector(
+          selectedCategory: _selectedCategory,
+          onTap: _showCategoryPicker,
+        ),
       ],
     );
   }
 
-  Widget _buildCategorySelector(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: Platform.isIOS
-            ? CupertinoColors.systemGrey6.withOpacity(0.3)
-            : Colors.grey.shade50,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Platform.isIOS
-              ? CupertinoColors.separator.withOpacity(0.2)
-              : Colors.grey.shade200,
-          width: 1,
-        ),
-      ),
-      child: Row(
-        children: [
-          Text(
-            'Kategori: ',
-            style: TextStyle(
-              color: Platform.isIOS
-                  ? CupertinoColors.secondaryLabel
-                  : Colors.grey[600],
-              fontSize: 14,
-            ),
-          ),
-          Expanded(
-            child: Text(
-              _selectedCategory,
-              style: TextStyle(
-                color: Platform.isIOS ? CupertinoColors.label : Colors.black87,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          GestureDetector(
-            onTap: _showCategoryPicker,
-            child: Icon(
-              Platform.isIOS
-                  ? CupertinoIcons.chevron_down
-                  : Icons.arrow_drop_down,
-              color: Platform.isIOS
-                  ? CupertinoColors.systemBlue
-                  : const Color(0xFFA68A38),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
+  /// Kategori seçici dialog
   void _showCategoryPicker() {
     if (Platform.isIOS) {
       showCupertinoModalPopup(
@@ -376,14 +375,19 @@ class _MoodTabState extends State<MoodTab> {
       showModalBottomSheet(
         context: context,
         builder: (context) => Container(
-          padding: const EdgeInsets.all(16),
+          padding: ResponsiveHelper.responsivePadding(context),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Kategori Seç',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: ResponsiveHelper.responsiveFontSize(
+                    context,
+                    mobile: 18,
+                    tablet: 20,
+                    desktop: 22,
+                  ),
                   fontWeight: FontWeight.bold,
                   color: Colors.grey[800],
                 ),
@@ -393,7 +397,7 @@ class _MoodTabState extends State<MoodTab> {
                 (category) => ListTile(
                   title: Text(category),
                   leading: category == _selectedCategory
-                      ? Icon(Icons.check, color: const Color(0xFFA68A38))
+                      ? const Icon(Icons.check, color: Color(0xFFA68A38))
                       : null,
                   onTap: () {
                     setState(() => _selectedCategory = category);
@@ -408,6 +412,7 @@ class _MoodTabState extends State<MoodTab> {
     }
   }
 
+  /// Olumlama ekle
   void _addAffirmation() {
     if (_affirmationController.text.trim().isEmpty) return;
 
@@ -422,123 +427,36 @@ class _MoodTabState extends State<MoodTab> {
     });
   }
 
+  /// Olumlamalar listesi
   Widget _buildAffirmationsList(BuildContext context) {
     if (_affirmations.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(32),
-        child: Text(
-          'Henüz olumlama eklenmemiş.\nYukarıdan yeni olumlama ekleyebilirsiniz.',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: Platform.isIOS
-                ? CupertinoColors.secondaryLabel
-                : Colors.grey[600],
-            fontSize: 14,
-          ),
-        ),
+      // ✅ Modüler boş durum widget'ı
+      return EmptyStateWidget(
+        message:
+            'Henüz olumlama eklenmemiş.\nYukarıdan yeni olumlama ekleyebilirsiniz.',
+        icon: Platform.isIOS ? CupertinoIcons.star : Icons.star_border,
       );
     }
 
+    // ✅ ÖĞRENİN: Modüler AffirmationCard kullanımı
+    // Her olumlama için aynı tasarım
     return Column(
       children: _affirmations.asMap().entries.map((entry) {
         final index = entry.key;
         final affirmation = entry.value;
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Platform.isIOS
-                ? CupertinoColors.systemGrey6.withOpacity(0.3)
-                : Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: Platform.isIOS
-                  ? CupertinoColors.separator.withOpacity(0.2)
-                  : Colors.grey.shade200,
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      affirmation.text,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: Platform.isIOS
-                            ? CupertinoColors.label
-                            : Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      affirmation.category,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Platform.isIOS
-                            ? CupertinoColors.secondaryLabel
-                            : Colors.grey[600],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  GestureDetector(
-                    onTap: () => _toggleFavorite(index),
-                    child: Icon(
-                      affirmation.isFavorite
-                          ? (Platform.isIOS
-                                ? CupertinoIcons.heart_fill
-                                : Icons.favorite)
-                          : (Platform.isIOS
-                                ? CupertinoIcons.heart
-                                : Icons.favorite_border),
-                      color: affirmation.isFavorite
-                          ? (Platform.isIOS
-                                ? CupertinoColors.systemRed
-                                : Colors.red)
-                          : (Platform.isIOS
-                                ? CupertinoColors.secondaryLabel
-                                : Colors.grey),
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () => _deleteAffirmation(index),
-                    child: Icon(
-                      Platform.isIOS
-                          ? CupertinoIcons.trash
-                          : Icons.delete_outline,
-                      color: Platform.isIOS
-                          ? CupertinoColors.systemRed
-                          : Colors.red,
-                      size: 20,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+        
+        return AffirmationCard(
+          text: affirmation.text,
+          category: affirmation.category,
+          isFavorite: affirmation.isFavorite,
+          onToggleFavorite: () => _toggleFavorite(index),
+          onDelete: () => _deleteAffirmation(index),
         );
       }).toList(),
     );
   }
 
+  /// Favori durumunu değiştir
   void _toggleFavorite(int index) {
     setState(() {
       _affirmations[index] = _affirmations[index].copyWith(
@@ -547,6 +465,7 @@ class _MoodTabState extends State<MoodTab> {
     });
   }
 
+  /// Olumlamayı sil
   void _deleteAffirmation(int index) {
     setState(() {
       _affirmations.removeAt(index);
@@ -554,6 +473,7 @@ class _MoodTabState extends State<MoodTab> {
   }
 }
 
+/// Ruh hali seçeneği model
 class _MoodOption {
   const _MoodOption({required this.label, required this.emoji});
 
@@ -561,6 +481,7 @@ class _MoodOption {
   final String emoji;
 }
 
+/// Olumlama model
 class _Affirmation {
   const _Affirmation({
     required this.text,

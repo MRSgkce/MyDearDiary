@@ -43,7 +43,7 @@ class PlatformButton extends PlatformSpecificWidget {
     Widget button = CupertinoButton(
       onPressed: onPressed,
       color: backgroundColor ?? CupertinoColors.systemBlue,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.zero, // Düz köşeler
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       child: Row(
         mainAxisSize: isFullWidth ? MainAxisSize.max : MainAxisSize.min,
@@ -138,7 +138,7 @@ class PlatformCard extends PlatformSpecificWidget {
         padding: padding ?? const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: backgroundColor ?? CupertinoColors.systemBackground,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.zero, // Düz köşeler
           border: Border.all(
             color: CupertinoColors.separator.withOpacity(0.3),
             width: 0.5,
@@ -170,11 +170,11 @@ class PlatformCard extends PlatformSpecificWidget {
       child: Card(
         elevation: 0,
         color: backgroundColor ?? Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.zero), // Düz köşeler
         child: Container(
           padding: padding ?? const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.zero, // Düz köşeler
             border: Border.all(color: Colors.grey.shade100, width: 1),
             boxShadow: [
               BoxShadow(
@@ -223,7 +223,7 @@ class PlatformTextField extends PlatformSpecificWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: CupertinoColors.systemGrey6.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.zero, // Düz köşeler
         border: Border.all(
           color: CupertinoColors.separator.withOpacity(0.2),
           width: 1,
@@ -255,15 +255,15 @@ class PlatformTextField extends PlatformSpecificWidget {
         filled: true,
         fillColor: Colors.grey.shade50,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.zero, // Düz köşeler
           borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.zero, // Düz köşeler
           borderSide: BorderSide(color: Colors.grey.shade200, width: 1),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.zero, // Düz köşeler
           borderSide: const BorderSide(
             color: Color(0xFFA68A38),
             width: 2,
