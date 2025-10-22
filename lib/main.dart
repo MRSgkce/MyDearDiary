@@ -6,12 +6,10 @@ import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Firebase'i başlat
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -44,6 +42,40 @@ class InspirationScreen extends StatefulWidget {
 class _InspirationScreenState extends State<InspirationScreen> {
   int _selectedIndex = 0;
 
+  // ✅ İlham Sözleri Listesi
+  final List<Map<String, dynamic>> _inspirationQuotes = [
+    {'text': '"sen nasıl bakarsan onu görürsün"', 'author': '— Sen'},
+    {
+      'text':
+          '"Hayatın en güzel anları, beklenmedik anda gelen mutluluklardır."',
+      'author': '— Anonim',
+    },
+    {
+      'text': '"Başarı, düştüğünde kalkabilmektir."',
+      'author': '— Nelson Mandela',
+    },
+    {
+      'text': '"Hayallerin gerçekleşmesi için önce hayal kurman gerekir."',
+      'author': '— Walt Disney',
+    },
+    {
+      'text':
+          '"Bugün yapabileceğin en iyi şey, dün yaptığından daha iyisini yapmaktır."',
+      'author': '— Anonim',
+    },
+    {
+      'text':
+          '"Her gün yeni bir başlangıçtır. Geçmişi bırak, geleceği planla, bugünü yaşa."',
+      'author': '— Anonim',
+    },
+    {
+      'text':
+          '"Mutluluk, sahip olduklarınla değil, hissettiklerinle ilgilidir."',
+      'author': '— Anonim',
+    },
+    {'text': '"İmkansız, sadece denenmemiş demektir."', 'author': '— Anonim'},
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -51,16 +83,11 @@ class _InspirationScreenState extends State<InspirationScreen> {
       body: Column(
         children: [
           // ✅ Top App Bar
-          SafeArea(
-            bottom: false,
-            child: _buildTopBar(context),
-          ),
-          
+          SafeArea(bottom: false, child: _buildTopBar(context)),
+
           // ✅ Main Content
-          Expanded(
-            child: _buildContentForTab(context, _selectedIndex),
-          ),
-          
+          Expanded(child: _buildContentForTab(context, _selectedIndex)),
+
           // ✅ Bottom Navigation
           _buildBottomNavigation(context),
         ],
@@ -92,7 +119,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 20),
-          
+
           // ✅ Başlık
           Text(
             'Bugün Nasıl Hissediyorsun?',
@@ -102,37 +129,34 @@ class _InspirationScreenState extends State<InspirationScreen> {
               color: Colors.grey.shade800,
             ),
           ),
-          
+
           const SizedBox(height: 8),
-          
+
           Text(
             'halini seç ve kaydet',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey.shade600,
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
           ),
-          
+
           const SizedBox(height: 30),
-          
+
           // ✅ Mood Grid
           _buildMoodGrid(context),
-          
+
           const SizedBox(height: 40),
-          
+
           // ✅ Journal Prompts
           _buildJournalPrompts(context),
-          
+
           const SizedBox(height: 30),
-          
+
           // ✅ Save Button
           _buildSaveButton(context),
-          
+
           const SizedBox(height: 40),
-          
+
           // ✅ Past Records
           _buildPastRecords(context),
-          
+
           const SizedBox(height: 100), // Bottom padding
         ],
       ),
@@ -162,14 +186,42 @@ class _InspirationScreenState extends State<InspirationScreen> {
   /// ✅ Mood Grid - Resimdeki gibi
   Widget _buildMoodGrid(BuildContext context) {
     final moods = [
-      {'icon': Icons.wb_sunny, 'label': 'Mutlu', 'color': Colors.yellow.shade300},
-      {'icon': Icons.favorite_border, 'label': 'Sevgi Dolu', 'color': Colors.pink.shade300},
-      {'icon': Icons.auto_awesome, 'label': 'Enerjik', 'color': Colors.purple.shade300},
-      {'icon': Icons.sentiment_neutral, 'label': 'Normal', 'color': Colors.grey.shade200},
+      {
+        'icon': Icons.wb_sunny,
+        'label': 'Mutlu',
+        'color': Colors.yellow.shade300,
+      },
+      {
+        'icon': Icons.favorite_border,
+        'label': 'Sevgi Dolu',
+        'color': Colors.pink.shade300,
+      },
+      {
+        'icon': Icons.auto_awesome,
+        'label': 'Enerjik',
+        'color': Colors.purple.shade300,
+      },
+      {
+        'icon': Icons.sentiment_neutral,
+        'label': 'Normal',
+        'color': Colors.grey.shade200,
+      },
       {'icon': Icons.cloud, 'label': 'Hüzünlü', 'color': Colors.blue.shade300},
-      {'icon': Icons.sentiment_dissatisfied, 'label': 'Stresli', 'color': Colors.red.shade300},
-      {'icon': Icons.nightlight_round, 'label': 'Yorgun', 'color': Colors.indigo.shade300},
-      {'icon': Icons.sentiment_satisfied, 'label': 'Huzurlu', 'color': Colors.green.shade300},
+      {
+        'icon': Icons.sentiment_dissatisfied,
+        'label': 'Stresli',
+        'color': Colors.red.shade300,
+      },
+      {
+        'icon': Icons.nightlight_round,
+        'label': 'Yorgun',
+        'color': Colors.indigo.shade300,
+      },
+      {
+        'icon': Icons.sentiment_satisfied,
+        'label': 'Huzurlu',
+        'color': Colors.green.shade300,
+      },
     ];
 
     return GridView.builder(
@@ -196,11 +248,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  mood['icon'] as IconData,
-                  size: 30,
-                  color: Colors.white,
-                ),
+                Icon(mood['icon'] as IconData, size: 30, color: Colors.white),
                 const SizedBox(height: 8),
                 Text(
                   mood['label'] as String,
@@ -233,9 +281,9 @@ class _InspirationScreenState extends State<InspirationScreen> {
             color: Colors.grey.shade800,
           ),
         ),
-        
+
         const SizedBox(height: 12),
-        
+
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -246,15 +294,12 @@ class _InspirationScreenState extends State<InspirationScreen> {
           ),
           child: Text(
             'Bugün başardığın şeyleri yaz...',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
           ),
         ),
-        
+
         const SizedBox(height: 24),
-        
+
         // ✅ İkinci prompt
         Text(
           'Neyi geliştirebilirim? 💭',
@@ -264,9 +309,9 @@ class _InspirationScreenState extends State<InspirationScreen> {
             color: Colors.grey.shade800,
           ),
         ),
-        
+
         const SizedBox(height: 12),
-        
+
         Container(
           width: double.infinity,
           padding: const EdgeInsets.all(16),
@@ -277,10 +322,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
           ),
           child: Text(
             'Geliştirebileceğin alanları düşün...',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey.shade500,
-            ),
+            style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
           ),
         ),
       ],
@@ -328,42 +370,46 @@ class _InspirationScreenState extends State<InspirationScreen> {
             color: Colors.grey.shade800,
           ),
         ),
-        
+
         const SizedBox(height: 16),
-        
-        ...records.map((record) => Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade100,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Text(
-                record['emoji']!,
-                style: const TextStyle(fontSize: 24),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                record['mood']!,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.grey.shade800,
+
+        ...records
+            .map(
+              (record) => Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Text(
+                      record['emoji']!,
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      record['mood']!,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      record['date']!,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const Spacer(),
-              Text(
-                record['date']!,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: Colors.grey.shade600,
-                ),
-              ),
-            ],
-          ),
-        )).toList(),
+            )
+            .toList(),
       ],
     );
   }
@@ -395,13 +441,48 @@ class _InspirationScreenState extends State<InspirationScreen> {
     );
   }
 
-  /// ✅ Main Content - Resimdeki gibi
+  /// ✅ Main Content - Aşağı doğru kaydırma
   Widget _buildMainContent(BuildContext context) {
-    return Center(
+    return SingleChildScrollView(
+      child: Column(
+        children: _inspirationQuotes.asMap().entries.map((entry) {
+          final index = entry.key;
+          final quote = entry.value;
+          return Column(
+            children: [
+              _buildInspirationPage(context, quote, index),
+              if (index < _inspirationQuotes.length - 1) // Son sayfa değilse
+                Container(
+                  height: 2,
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 40,
+                    vertical: 20,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade300,
+                    borderRadius: BorderRadius.circular(1),
+                  ),
+                ),
+            ],
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  /// ✅ İlham Sayfası
+  Widget _buildInspirationPage(
+    BuildContext context,
+    Map<String, dynamic> quote,
+    int index,
+  ) {
+    return Container(
+      height: MediaQuery.of(context).size.height - 200, // Tam ekran yükseklik
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // ✅ Quote Icon - Resimdeki gibi
+          // ✅ Quote Icon
           Stack(
             children: [
               Container(
@@ -417,7 +498,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
                   color: Colors.grey.shade400,
                 ),
               ),
-              // Preview overlay
+              // Page indicator
               Positioned(
                 top: 0,
                 left: 0,
@@ -430,11 +511,11 @@ class _InspirationScreenState extends State<InspirationScreen> {
                   ),
                   child: Center(
                     child: Text(
-                      'Preview',
+                      '${index + 1}',
                       style: TextStyle(
                         color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -442,14 +523,14 @@ class _InspirationScreenState extends State<InspirationScreen> {
               ),
             ],
           ),
-          
+
           const SizedBox(height: 40),
-          
+
           // ✅ Quote Text
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              '"sen nasıl bakarsan onu görürsün"',
+              quote['text'],
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 24,
@@ -460,9 +541,9 @@ class _InspirationScreenState extends State<InspirationScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 30),
-          
+
           // ✅ Author
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -471,7 +552,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
-              '— Sen',
+              quote['author'],
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -479,9 +560,9 @@ class _InspirationScreenState extends State<InspirationScreen> {
               ),
             ),
           ),
-          
+
           const SizedBox(height: 50),
-          
+
           // ✅ Action Buttons
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -493,36 +574,8 @@ class _InspirationScreenState extends State<InspirationScreen> {
               _buildActionButton(Icons.copy),
             ],
           ),
-          
+
           const SizedBox(height: 40),
-          
-          // ✅ Scroll Button
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade800,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Kaydır',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Icon(
-                  Icons.arrow_downward,
-                  color: Colors.white,
-                  size: 16,
-                ),
-              ],
-            ),
-          ),
         ],
       ),
     );
@@ -538,11 +591,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
         borderRadius: BorderRadius.circular(25),
         border: Border.all(color: Colors.grey.shade300, width: 1),
       ),
-      child: Icon(
-        icon,
-        size: 24,
-        color: Colors.grey.shade700,
-      ),
+      child: Icon(icon, size: 24, color: Colors.grey.shade700),
     );
   }
 
@@ -577,7 +626,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
   /// ✅ Navigation Item - Resimdeki gibi
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = _selectedIndex == index;
-    
+
     return GestureDetector(
       onTap: () {
         setState(() {
@@ -594,11 +643,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
               color: isSelected ? Colors.grey.shade300 : Colors.transparent,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: Icon(
-              icon,
-              size: 20,
-              color: Colors.white,
-            ),
+            child: Icon(icon, size: 20, color: Colors.white),
           ),
           const SizedBox(height: 4),
           Text(
