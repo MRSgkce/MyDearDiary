@@ -1,197 +1,124 @@
-import 'dart:convert';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-
-class InspirationEntry {
-  final String id;
-  final String text;
-  final DateTime dateCreated;
-  final String? author;
-
-  InspirationEntry({
-    required this.id,
-    required this.text,
-    required this.dateCreated,
-    this.author,
-  });
-
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'text': text,
-      'dateCreated': dateCreated.toIso8601String(),
-      'author': author,
-    };
-  }
-
-  factory InspirationEntry.fromJson(Map<String, dynamic> json) {
-    return InspirationEntry(
-      id: json['id'],
-      text: json['text'],
-      dateCreated: DateTime.parse(json['dateCreated']),
-      author: json['author'],
-    );
-  }
-}
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class InspirationService {
-  static const String _inspirationKey = 'saved_inspirations';
+  static const String _inspirationsKey = 'inspiration_quotes';
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  static const String _collectionName = 'inspiration_quotes';
 
-  // İlham kaydet (Firebase + Local backup)
-  static Future<void> saveInspiration(String text, {String? author}) async {
-    final newInspiration = InspirationEntry(
-      id: DateTime.now().millisecondsSinceEpoch.toString(),
-      text: text,
-      dateCreated: DateTime.now(),
-      author: author,
-    );
-
-    // Firebase'e kaydet (Authentication olmadan)
+  // Firebase'e ilham sözü ekle
+  static Future<void> addInspirationToFirebase(Map<String, dynamic> inspiration) async {
     try {
-      print('🔥 Firebase\'e kaydediliyor: ${newInspiration.text}');
-      await _firestore
-          .collection('inspirations')
-          .doc(newInspiration.id)
-          .set(newInspiration.toJson());
-      print('✅ Firebase\'e başarıyla kaydedildi!');
+      final inspirationData = {
+        'text': inspiration['text'],
+        'author': inspiration['author'],
+        'likes': 0,
+        'createdAt': Timestamp.now(),
+        'updatedAt': Timestamp.now(),
+      };
+      
+      await _firestore.collection(_collectionName).add(inspirationData);
+      print('İlham sözü Firebase\'e başarıyla kaydedildi');
     } catch (e) {
-      print('❌ Firebase kaydetme hatası: $e');
-      // Hata durumunda local'e kaydet
-      await _saveToLocal(newInspiration);
+      print('Firebase\'e ilham kayıt hatası: $e');
+      rethrow;
     }
-    
-    // Her durumda local'e de kaydet (yedek olarak)
-    await _saveToLocal(newInspiration);
   }
 
-  // Local'e kaydet (yedek olarak)
-  static Future<void> _saveToLocal(InspirationEntry inspiration) async {
-    final prefs = await SharedPreferences.getInstance();
-    final existingInspirations = await getInspirations();
-    existingInspirations.add(inspiration);
-
-    final inspirationsJson = existingInspirations
-        .map((insp) => insp.toJson())
-        .toList();
-
-    await prefs.setString(_inspirationKey, jsonEncode(inspirationsJson));
-  }
-
-  // İlhamları getir (Firebase + Local backup)
-  static Future<List<InspirationEntry>> getInspirations() async {
-    // Firebase'den getir (Authentication olmadan)
+  // Firebase'den tüm ilham sözlerini getir
+  static Future<List<Map<String, dynamic>>> getAllInspirationsFromFirebase() async {
     try {
-      final snapshot = await _firestore
-          .collection('inspirations')
-          .orderBy('dateCreated', descending: true)
+      final QuerySnapshot snapshot = await _firestore
+          .collection(_collectionName)
+          .orderBy('createdAt', descending: true)
           .get();
+      
+      return snapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return {
+          'id': doc.id,
+          'text': data['text'],
+          'author': data['author'],
+          'likes': data['likes'] ?? 0,
+        };
+      }).toList();
+    } catch (e) {
+      print('Firebase\'den ilham sözleri getirilirken hata: $e');
+      return [];
+    }
+  }
 
-      if (snapshot.docs.isNotEmpty) {
-        print('✅ Firebase\'den ${snapshot.docs.length} ilham getirildi');
-        return snapshot.docs
-            .map((doc) => InspirationEntry.fromJson(doc.data()))
-            .toList();
+  // İlham sözü beğenme (Firebase)
+  static Future<void> likeInspiration(String id) async {
+    try {
+      await _firestore.collection(_collectionName).doc(id).update({
+        'likes': FieldValue.increment(1),
+        'updatedAt': Timestamp.now(),
+      });
+      print('İlham sözü beğenildi');
+    } catch (e) {
+      print('Beğenme hatası: $e');
+      rethrow;
+    }
+  }
+
+  // İlham sözü silme (Firebase)
+  static Future<void> deleteInspiration(String id) async {
+    try {
+      await _firestore.collection(_collectionName).doc(id).delete();
+      print('İlham sözü Firebase\'den silindi');
+    } catch (e) {
+      print('Silme hatası: $e');
+      rethrow;
+    }
+  }
+
+  // Local storage'dan tüm ilham sözlerini getir
+  static Future<List<Map<String, dynamic>>> getAllInspirationsFromLocal() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? inspirationsJson = prefs.getString(_inspirationsKey);
+
+    if (inspirationsJson == null) {
+      return [];
+    }
+
+    final List<dynamic> inspirationsList = json.decode(inspirationsJson);
+    return inspirationsList.map((json) => Map<String, dynamic>.from(json)).toList();
+  }
+
+  // Local storage'a ilham sözlerini kaydet
+  static Future<void> saveInspirationsToLocal(List<Map<String, dynamic>> inspirations) async {
+    final prefs = await SharedPreferences.getInstance();
+    final inspirationsJson = json.encode(inspirations);
+    await prefs.setString(_inspirationsKey, inspirationsJson);
+  }
+
+  // Hibrit sistem - önce Firebase'den dene, sonra local
+  static Future<List<Map<String, dynamic>>> getAllInspirations() async {
+    try {
+      final firebaseInspirations = await getAllInspirationsFromFirebase();
+      if (firebaseInspirations.isNotEmpty) {
+        return firebaseInspirations;
       }
     } catch (e) {
-      print('❌ Firebase okuma hatası: $e');
-      // Hata durumunda local'den getir
+      print('Firebase bağlantı hatası, local storage kullanılıyor: $e');
     }
-
-    // Firebase'de veri yoksa veya hata varsa local'den getir
-    print('📱 Local\'den ilhamlar getiriliyor');
-    return await _getFromLocal();
+    
+    return await getAllInspirationsFromLocal();
   }
 
-  // Local'den getir (yedek olarak)
-  static Future<List<InspirationEntry>> _getFromLocal() async {
-    final prefs = await SharedPreferences.getInstance();
-    final inspirationsString = prefs.getString(_inspirationKey);
-
-    if (inspirationsString == null) return [];
-
-    final List<dynamic> inspirationsJson = jsonDecode(inspirationsString);
-    return inspirationsJson
-        .map((json) => InspirationEntry.fromJson(json))
-        .toList();
-  }
-
-  // İlham sil (Firebase + Local)
-  static Future<void> deleteInspiration(String id) async {
-    // Firebase'den sil (Authentication olmadan)
+  // Hibrit sistem - Firebase + Local
+  static Future<void> addInspiration(Map<String, dynamic> inspiration) async {
     try {
-      await _firestore
-          .collection('inspirations')
-          .doc(id)
-          .delete();
-      print('✅ Firebase\'den silindi: $id');
+      await addInspirationToFirebase(inspiration);
     } catch (e) {
-      print('❌ Firebase silme hatası: $e');
+      print('Firebase kayıt başarısız, local storage kullanılıyor: $e');
     }
-
-    // Local'den de sil
-    await _deleteFromLocal(id);
-  }
-
-  // Local'den sil
-  static Future<void> _deleteFromLocal(String id) async {
-    final prefs = await SharedPreferences.getInstance();
-    final existingInspirations = await _getFromLocal();
-
-    existingInspirations.removeWhere((inspiration) => inspiration.id == id);
-
-    final inspirationsJson = existingInspirations
-        .map((inspiration) => inspiration.toJson())
-        .toList();
-
-    await prefs.setString(_inspirationKey, jsonEncode(inspirationsJson));
-  }
-
-  // İlham güncelle (Firebase + Local)
-  static Future<void> updateInspiration(
-    String id,
-    String text, {
-    String? author,
-  }) async {
-    // Firebase'de güncelle (Authentication olmadan)
-    try {
-      await _firestore
-          .collection('inspirations')
-          .doc(id)
-          .update({
-        'text': text,
-        'author': author,
-      });
-      print('✅ Firebase\'de güncellendi: $id');
-    } catch (e) {
-      print('❌ Firebase güncelleme hatası: $e');
-    }
-
-    // Local'de de güncelle
-    await _updateLocal(id, text, author: author);
-  }
-
-  // Local'de güncelle
-  static Future<void> _updateLocal(String id, String text, {String? author}) async {
-    final prefs = await SharedPreferences.getInstance();
-    final existingInspirations = await _getFromLocal();
-
-    final index = existingInspirations.indexWhere(
-      (inspiration) => inspiration.id == id,
-    );
-    if (index != -1) {
-      existingInspirations[index] = InspirationEntry(
-        id: id,
-        text: text,
-        dateCreated: existingInspirations[index].dateCreated,
-        author: author,
-      );
-
-      final inspirationsJson = existingInspirations
-          .map((inspiration) => inspiration.toJson())
-          .toList();
-
-      await prefs.setString(_inspirationKey, jsonEncode(inspirationsJson));
-    }
+    
+    // Local storage'a da kaydet
+    final inspirations = await getAllInspirationsFromLocal();
+    inspirations.add(inspiration);
+    await saveInspirationsToLocal(inspirations);
   }
 }
