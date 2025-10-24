@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../services/inspiration_service.dart';
+import '../models/inspiration_entry.dart';
 
 // InspirationService provider - Static metodlar kullandığımız için gerekli değil
 // final inspirationServiceProvider = Provider<InspirationService>((ref) {
@@ -20,7 +21,10 @@ class InspirationsNotifier extends StateNotifier<List<InspirationEntry>> {
 
   // İlhamları yükle
   Future<void> loadInspirations() async {
-    final inspirations = await InspirationService.getInspirations();
+    final inspirationsData = await InspirationService.getInspirations();
+    final inspirations = inspirationsData
+        .map((data) => InspirationEntry.fromJson(data))
+        .toList();
     state = inspirations;
   }
 

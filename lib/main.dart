@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'firebase_options.dart';
 import 'services/mood_service.dart';
 import 'models/mood_entry.dart';
 import 'services/inspiration_service.dart';
+import 'providers/inspiration_provider.dart';
+import 'models/inspiration_entry.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Firebase'i başlat
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  // Firebase emulator'ı başlat (debug modunda)
+  if (kDebugMode) {
+    try {
+      FirebaseFirestore.instance.useFirestoreEmulator('127.0.0.1', 8080);
+      print('🔥 Firebase emulator bağlandı: 127.0.0.1:8080');
+    } catch (e) {
+      print('⚠️ Firebase emulator bağlantı hatası: $e');
+    }
+  }
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -36,14 +50,28 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class InspirationScreen extends StatefulWidget {
+class InspirationScreen extends ConsumerWidget {
   const InspirationScreen({super.key});
 
   @override
-  State<InspirationScreen> createState() => _InspirationScreenState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final inspirations = ref.watch(inspirationsProvider);
+
+    return _InspirationScreenContent(inspirations: inspirations);
+  }
 }
 
-class _InspirationScreenState extends State<InspirationScreen> {
+class _InspirationScreenContent extends ConsumerStatefulWidget {
+  final List<InspirationEntry> inspirations;
+
+  const _InspirationScreenContent({required this.inspirations});
+
+  @override
+  ConsumerState<_InspirationScreenContent> createState() =>
+      _InspirationScreenState();
+}
+
+class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
   int _selectedIndex = 0;
   String? _selectedMood;
   String? _selectedEmoji;
@@ -57,7 +85,6 @@ class _InspirationScreenState extends State<InspirationScreen> {
   @override
   void initState() {
     super.initState();
-    _loadInspirations();
   }
 
   @override
@@ -68,20 +95,6 @@ class _InspirationScreenState extends State<InspirationScreen> {
     _newAuthorController.dispose();
     _pageController.dispose();
     super.dispose();
-  }
-
-  // Firebase'den ilham sözlerini yükle
-  Future<void> _loadInspirations() async {
-    try {
-      final inspirations = await InspirationService.getAllInspirations();
-      if (mounted) {
-        setState(() {
-          _inspirationQuotes = inspirations;
-        });
-      }
-    } catch (e) {
-      print('İlham sözleri yüklenirken hata: $e');
-    }
   }
 
   // Mood için emoji mapping
@@ -111,45 +124,21 @@ class _InspirationScreenState extends State<InspirationScreen> {
   // Ay ismi döndür
   String _getMonthName(int month) {
     const months = [
-      'Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz',
-      'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'
+      'Oca',
+      'Şub',
+      'Mar',
+      'Nis',
+      'May',
+      'Haz',
+      'Tem',
+      'Ağu',
+      'Eyl',
+      'Eki',
+      'Kas',
+      'Ara',
     ];
     return months[month - 1];
   }
-
-  // ✅ İlham Sözleri Listesi - State'e taşındı
-  List<Map<String, dynamic>> _inspirationQuotes = [
-    {'text': '"sen nasıl bakarsan onu görürsün"', 'author': '— Sen'},
-    {
-      'text':
-          '"Hayatın en güzel anları, beklenmedik anda gelen mutluluklardır."',
-      'author': '— Anonim',
-    },
-    {
-      'text': '"Başarı, düştüğünde kalkabilmektir."',
-      'author': '— Nelson Mandela',
-    },
-    {
-      'text': '"Hayallerin gerçekleşmesi için önce hayal kurman gerekir."',
-      'author': '— Walt Disney',
-    },
-    {
-      'text':
-          '"Bugün yapabileceğin en iyi şey, dün yaptığından daha iyisini yapmaktır."',
-      'author': '— Anonim',
-    },
-    {
-      'text':
-          '"Her gün yeni bir başlangıçtır. Geçmişi bırak, geleceği planla, bugünü yaşa."',
-      'author': '— Anonim',
-    },
-    {
-      'text':
-          '"Mutluluk, sahip olduklarınla değil, hissettiklerinle ilgilidir."',
-      'author': '— Anonim',
-    },
-    {'text': '"İmkansız, sadece denenmemiş demektir."', 'author': '— Anonim'},
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -322,7 +311,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
             decoration: BoxDecoration(
               color: mood['color'] as Color,
               borderRadius: BorderRadius.circular(12),
-              border: _selectedMood == mood['label'] 
+              border: _selectedMood == mood['label']
                   ? Border.all(color: Colors.black, width: 3)
                   : null,
             ),
@@ -439,11 +428,11 @@ class _InspirationScreenState extends State<InspirationScreen> {
             id: MoodService.generateId(),
             mood: _selectedMood!,
             emoji: _selectedEmoji!,
-            journalPrompt1: _prompt1Controller.text.isNotEmpty 
-                ? _prompt1Controller.text 
+            journalPrompt1: _prompt1Controller.text.isNotEmpty
+                ? _prompt1Controller.text
                 : null,
-            journalPrompt2: _prompt2Controller.text.isNotEmpty 
-                ? _prompt2Controller.text 
+            journalPrompt2: _prompt2Controller.text.isNotEmpty
+                ? _prompt2Controller.text
                 : null,
             date: DateTime.now(),
             createdAt: DateTime.now(),
@@ -534,10 +523,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
                 ),
                 child: Text(
                   'Henüz kayıt yok. İlk kaydınızı oluşturun!',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               )
             else
@@ -644,7 +630,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
                   Navigator.of(context).pop();
                   onConfirm();
                 },
-                style: isDestructive 
+                style: isDestructive
                     ? ElevatedButton.styleFrom(backgroundColor: Colors.red)
                     : null,
                 child: Text(confirmText),
@@ -696,18 +682,16 @@ class _InspirationScreenState extends State<InspirationScreen> {
                 onPressed: () async {
                   if (_newQuoteController.text.isNotEmpty) {
                     try {
-                      final newInspiration = {
-                        'text': _newQuoteController.text,
-                        'author': _newAuthorController.text.isNotEmpty 
-                            ? _newAuthorController.text 
-                            : '— Sen',
-                      };
+                      // Provider'ı kullanarak ilham ekle
+                      await ref
+                          .read(inspirationsProvider.notifier)
+                          .addInspiration(
+                            _newQuoteController.text,
+                            author: _newAuthorController.text.isNotEmpty
+                                ? _newAuthorController.text
+                                : '— Sen',
+                          );
 
-                      await InspirationService.addInspiration(newInspiration);
-                      
-                      // Listeyi yeniden yükle
-                      await _loadInspirations();
-                      
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -715,7 +699,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
                             backgroundColor: Colors.green,
                           ),
                         );
-                        
+
                         Navigator.of(context).pop();
                         _newQuoteController.clear();
                         _newAuthorController.clear();
@@ -788,18 +772,16 @@ class _InspirationScreenState extends State<InspirationScreen> {
                 onPressed: () async {
                   if (_newQuoteController.text.isNotEmpty) {
                     try {
-                      final newInspiration = {
-                        'text': _newQuoteController.text,
-                        'author': _newAuthorController.text.isNotEmpty 
-                            ? _newAuthorController.text 
-                            : '— Sen',
-                      };
+                      // Provider'ı kullanarak ilham ekle
+                      await ref
+                          .read(inspirationsProvider.notifier)
+                          .addInspiration(
+                            _newQuoteController.text,
+                            author: _newAuthorController.text.isNotEmpty
+                                ? _newAuthorController.text
+                                : '— Sen',
+                          );
 
-                      await InspirationService.addInspiration(newInspiration);
-                      
-                      // Listeyi yeniden yükle
-                      await _loadInspirations();
-                      
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -807,7 +789,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
                             backgroundColor: Colors.green,
                           ),
                         );
-                        
+
                         Navigator.of(context).pop();
                         _newQuoteController.clear();
                         _newAuthorController.clear();
@@ -876,17 +858,47 @@ class _InspirationScreenState extends State<InspirationScreen> {
 
   /// ✅ Main Content - Kayan sayfa (PageView)
   Widget _buildMainContent(BuildContext context) {
+    if (widget.inspirations.isEmpty) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.lightbulb_outline,
+              size: 64,
+              color: Colors.grey.shade400,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Henüz ilham sözü yok',
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey.shade600,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Yeni ilham sözü eklemek için + butonuna basın',
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+            ),
+          ],
+        ),
+      );
+    }
+
     return PageView.builder(
       controller: _pageController,
       scrollDirection: Axis.vertical, // Dikey kaydırma
-      itemCount: _inspirationQuotes.length,
+      physics: const BouncingScrollPhysics(), // iOS tarzı kaydırma
+      itemCount: widget.inspirations.length,
       onPageChanged: (index) {
         setState(() {
           _currentPageIndex = index;
         });
       },
       itemBuilder: (context, index) {
-        final quote = _inspirationQuotes[index];
+        final quote = widget.inspirations[index];
         return _buildInspirationPage(context, quote, index);
       },
     );
@@ -895,11 +907,11 @@ class _InspirationScreenState extends State<InspirationScreen> {
   /// ✅ İlham Sayfası
   Widget _buildInspirationPage(
     BuildContext context,
-    Map<String, dynamic> quote,
+    InspirationEntry quote,
     int index,
   ) {
     return Container(
-      height: MediaQuery.of(context).size.height - 200, // Tam ekran yükseklik
+      height: MediaQuery.of(context).size.height, // Tam ekran yükseklik
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -925,7 +937,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              quote['text'],
+              quote.text,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 24,
@@ -947,7 +959,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Text(
-              quote['author'],
+              quote.author ?? '— Anonim',
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
@@ -963,14 +975,11 @@ class _InspirationScreenState extends State<InspirationScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _buildActionButton(
-                Icons.delete_outline, 
+                Icons.delete_outline,
                 () => _deleteQuote(context, quote),
               ),
               const SizedBox(width: 30),
-              _buildActionButton(
-                Icons.copy, 
-                () => _copyQuote(context, quote),
-              ),
+              _buildActionButton(Icons.copy, () => _copyQuote(context, quote)),
             ],
           ),
 
@@ -981,7 +990,7 @@ class _InspirationScreenState extends State<InspirationScreen> {
   }
 
   // İlham sözü silme - Adaptive
-  void _deleteQuote(BuildContext context, Map<String, dynamic> quote) {
+  void _deleteQuote(BuildContext context, InspirationEntry quote) {
     _showAdaptiveDialog(
       context: context,
       title: 'İlham Sözünü Sil',
@@ -991,19 +1000,16 @@ class _InspirationScreenState extends State<InspirationScreen> {
       isDestructive: true,
       onConfirm: () async {
         try {
-          if (quote['id'] != null) {
+          if (quote.id.isNotEmpty) {
             // Firebase'den sil
-            await InspirationService.deleteInspiration(quote['id']);
+            await InspirationService.deleteInspiration(quote.id);
           }
-          
-          // Local'den de sil
-          setState(() {
-            _inspirationQuotes.remove(quote);
-          });
-          
-          // Listeyi yeniden yükle
-          await _loadInspirations();
-          
+
+          // Provider'ı yenile
+          // setState artık gerekli değil, provider otomatik güncellenecek
+
+          // Provider otomatik güncellenecek
+
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
@@ -1026,10 +1032,11 @@ class _InspirationScreenState extends State<InspirationScreen> {
     );
   }
 
-
   // İlham sözü kopyalama
-  void _copyQuote(BuildContext context, Map<String, dynamic> quote) {
-    Clipboard.setData(ClipboardData(text: '${quote['text']} ${quote['author']}'));
+  void _copyQuote(BuildContext context, InspirationEntry quote) {
+    Clipboard.setData(
+      ClipboardData(text: '${quote.text} ${quote.author ?? '— Anonim'}'),
+    );
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('📋 İlham sözü panoya kopyalandı!'),

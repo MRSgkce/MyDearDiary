@@ -8,7 +8,9 @@ class InspirationService {
   static const String _collectionName = 'inspiration_quotes';
 
   // Firebase'e ilham sözü ekle
-  static Future<void> addInspirationToFirebase(Map<String, dynamic> inspiration) async {
+  static Future<void> addInspirationToFirebase(
+    Map<String, dynamic> inspiration,
+  ) async {
     try {
       final inspirationData = {
         'text': inspiration['text'],
@@ -17,7 +19,7 @@ class InspirationService {
         'createdAt': Timestamp.now(),
         'updatedAt': Timestamp.now(),
       };
-      
+
       await _firestore.collection(_collectionName).add(inspirationData);
       print('İlham sözü Firebase\'e başarıyla kaydedildi');
     } catch (e) {
@@ -27,13 +29,14 @@ class InspirationService {
   }
 
   // Firebase'den tüm ilham sözlerini getir
-  static Future<List<Map<String, dynamic>>> getAllInspirationsFromFirebase() async {
+  static Future<List<Map<String, dynamic>>>
+  getAllInspirationsFromFirebase() async {
     try {
       final QuerySnapshot snapshot = await _firestore
           .collection(_collectionName)
           .orderBy('createdAt', descending: true)
           .get();
-      
+
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         return {
@@ -75,7 +78,8 @@ class InspirationService {
   }
 
   // Local storage'dan tüm ilham sözlerini getir
-  static Future<List<Map<String, dynamic>>> getAllInspirationsFromLocal() async {
+  static Future<List<Map<String, dynamic>>>
+  getAllInspirationsFromLocal() async {
     final prefs = await SharedPreferences.getInstance();
     final String? inspirationsJson = prefs.getString(_inspirationsKey);
 
@@ -84,11 +88,15 @@ class InspirationService {
     }
 
     final List<dynamic> inspirationsList = json.decode(inspirationsJson);
-    return inspirationsList.map((json) => Map<String, dynamic>.from(json)).toList();
+    return inspirationsList
+        .map((json) => Map<String, dynamic>.from(json))
+        .toList();
   }
 
   // Local storage'a ilham sözlerini kaydet
-  static Future<void> saveInspirationsToLocal(List<Map<String, dynamic>> inspirations) async {
+  static Future<void> saveInspirationsToLocal(
+    List<Map<String, dynamic>> inspirations,
+  ) async {
     final prefs = await SharedPreferences.getInstance();
     final inspirationsJson = json.encode(inspirations);
     await prefs.setString(_inspirationsKey, inspirationsJson);
@@ -104,7 +112,7 @@ class InspirationService {
     } catch (e) {
       print('Firebase bağlantı hatası, local storage kullanılıyor: $e');
     }
-    
+
     return await getAllInspirationsFromLocal();
   }
 
@@ -115,10 +123,43 @@ class InspirationService {
     } catch (e) {
       print('Firebase kayıt başarısız, local storage kullanılıyor: $e');
     }
-    
+
     // Local storage'a da kaydet
     final inspirations = await getAllInspirationsFromLocal();
-    inspirations.add(inspiration);
+    // ID ekle (local storage için)
+    final inspirationWithId = {
+      ...inspiration,
+      'id': DateTime.now().millisecondsSinceEpoch.toString(),
+    };
+    inspirations.add(inspirationWithId);
     await saveInspirationsToLocal(inspirations);
+  }
+
+  // Provider için uyumlu metodlar
+  static Future<List<Map<String, dynamic>>> getInspirations() async {
+    return await getAllInspirations();
+  }
+
+  static Future<void> saveInspiration(String text, {String? author}) async {
+    final inspiration = {'text': text, 'author': author, 'likes': 0};
+    await addInspiration(inspiration);
+  }
+
+  static Future<void> updateInspiration(
+    String id,
+    String text, {
+    String? author,
+  }) async {
+    try {
+      await _firestore.collection(_collectionName).doc(id).update({
+        'text': text,
+        'author': author,
+        'updatedAt': Timestamp.now(),
+      });
+      print('İlham sözü güncellendi');
+    } catch (e) {
+      print('Güncelleme hatası: $e');
+      rethrow;
+    }
   }
 }
