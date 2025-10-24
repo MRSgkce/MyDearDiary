@@ -38,12 +38,19 @@ class InspirationService {
   getAllInspirationsFromFirebase() async {
     try {
       print('🔥 Firebase\'den veri çekiliyor...');
+      print('📋 Collection ismi: $_collectionName');
+
+      // Önce basit sorgu dene
       final QuerySnapshot snapshot = await _firestore
           .collection(_collectionName)
-          .orderBy('createdAt', descending: true)
           .get();
 
       print('📊 Firebase\'den ${snapshot.docs.length} document geldi');
+
+      if (snapshot.docs.isEmpty) {
+        print('⚠️ Collection boş! Firebase Console\'da kontrol edin');
+        return [];
+      }
 
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
