@@ -7,7 +7,7 @@ service cloud.firestore {
     match /mood_entries/{document} {
       allow read, write: if true;
     }
-    match /inspiration_quotes/{document} {
+    match /inspirations/{document} {
       allow read, write: if true;
     }
   }

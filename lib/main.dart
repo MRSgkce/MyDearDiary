@@ -18,15 +18,8 @@ void main() async {
   // Firebase'i başlat
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
-  // Firebase emulator'ı başlat (debug modunda)
-  if (kDebugMode) {
-    try {
-      FirebaseFirestore.instance.useFirestoreEmulator('127.0.0.1', 8080);
-      print('🔥 Firebase emulator bağlandı: 127.0.0.1:8080');
-    } catch (e) {
-      print('⚠️ Firebase emulator bağlantı hatası: $e');
-    }
-  }
+  // Production Firebase kullan (emulator kaldırıldı)
+  print('🔥 Production Firebase bağlandı');
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -79,6 +72,8 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
   final TextEditingController _prompt2Controller = TextEditingController();
   final TextEditingController _newQuoteController = TextEditingController();
   final TextEditingController _newAuthorController = TextEditingController();
+  final TextEditingController _newCategoryController = TextEditingController();
+  final TextEditingController _newTagsController = TextEditingController();
   final PageController _pageController = PageController();
   int _currentPageIndex = 0;
 
@@ -643,7 +638,8 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
   }
 
   // Yeni ilham ekleme dialog'u - Adaptive
-  void _showAddInspirationDialog(BuildContext context) {
+  void _showAddInspirationDialog(BuildContext context, WidgetRef ref) {
+    print('📱 Dialog açılıyor...');
     if (Theme.of(context).platform == TargetPlatform.iOS) {
       showCupertinoDialog(
         context: context,
@@ -666,6 +662,18 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
                   placeholder: '— Sen veya — Anonim',
                   padding: const EdgeInsets.all(12),
                 ),
+                const SizedBox(height: 16),
+                CupertinoTextField(
+                  controller: _newCategoryController,
+                  placeholder: 'Kategori (Genel, Motivasyon, Başarı...)',
+                  padding: const EdgeInsets.all(12),
+                ),
+                const SizedBox(height: 16),
+                CupertinoTextField(
+                  controller: _newTagsController,
+                  placeholder: 'Etiketler (motivasyon, başarı, ilham)',
+                  padding: const EdgeInsets.all(12),
+                ),
               ],
             ),
             actions: [
@@ -675,14 +683,28 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
                   Navigator.of(context).pop();
                   _newQuoteController.clear();
                   _newAuthorController.clear();
+                  _newCategoryController.clear();
+                  _newTagsController.clear();
                 },
               ),
               CupertinoDialogAction(
                 child: const Text('Ekle'),
                 onPressed: () async {
+                  print('🔘 Ekle butonuna basıldı');
                   if (_newQuoteController.text.isNotEmpty) {
+                    print('📝 Metin var: ${_newQuoteController.text}');
                     try {
                       // Provider'ı kullanarak ilham ekle
+                      print('🔄 Provider çağrılıyor...');
+
+                      // Etiketleri virgülle ayır
+                      final tags = _newTagsController.text.isNotEmpty
+                          ? _newTagsController.text
+                                .split(',')
+                                .map((e) => e.trim())
+                                .toList()
+                          : <String>[];
+
                       await ref
                           .read(inspirationsProvider.notifier)
                           .addInspiration(
@@ -690,7 +712,12 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
                             author: _newAuthorController.text.isNotEmpty
                                 ? _newAuthorController.text
                                 : '— Sen',
+                            category: _newCategoryController.text.isNotEmpty
+                                ? _newCategoryController.text
+                                : 'Genel',
+                            tags: tags,
                           );
+                      print('✅ Provider başarılı');
 
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -703,6 +730,8 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
                         Navigator.of(context).pop();
                         _newQuoteController.clear();
                         _newAuthorController.clear();
+                        _newCategoryController.clear();
+                        _newTagsController.clear();
                       }
                     } catch (e) {
                       if (context.mounted) {
@@ -757,6 +786,24 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
                     border: OutlineInputBorder(),
                   ),
                 ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _newCategoryController,
+                  decoration: const InputDecoration(
+                    labelText: 'Kategori',
+                    hintText: 'Genel, Motivasyon, Başarı...',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: _newTagsController,
+                  decoration: const InputDecoration(
+                    labelText: 'Etiketler',
+                    hintText: 'motivasyon, başarı, ilham (virgülle ayırın)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
               ],
             ),
             actions: [
@@ -765,14 +812,28 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
                   Navigator.of(context).pop();
                   _newQuoteController.clear();
                   _newAuthorController.clear();
+                  _newCategoryController.clear();
+                  _newTagsController.clear();
                 },
                 child: const Text('İptal'),
               ),
               ElevatedButton(
                 onPressed: () async {
+                  print('🔘 Ekle butonuna basıldı');
                   if (_newQuoteController.text.isNotEmpty) {
+                    print('📝 Metin var: ${_newQuoteController.text}');
                     try {
                       // Provider'ı kullanarak ilham ekle
+                      print('🔄 Provider çağrılıyor...');
+
+                      // Etiketleri virgülle ayır
+                      final tags = _newTagsController.text.isNotEmpty
+                          ? _newTagsController.text
+                                .split(',')
+                                .map((e) => e.trim())
+                                .toList()
+                          : <String>[];
+
                       await ref
                           .read(inspirationsProvider.notifier)
                           .addInspiration(
@@ -780,7 +841,12 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
                             author: _newAuthorController.text.isNotEmpty
                                 ? _newAuthorController.text
                                 : '— Sen',
+                            category: _newCategoryController.text.isNotEmpty
+                                ? _newCategoryController.text
+                                : 'Genel',
+                            tags: tags,
                           );
+                      print('✅ Provider başarılı');
 
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -793,6 +859,8 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
                         Navigator.of(context).pop();
                         _newQuoteController.clear();
                         _newAuthorController.clear();
+                        _newCategoryController.clear();
+                        _newTagsController.clear();
                       }
                     } catch (e) {
                       if (context.mounted) {
@@ -834,7 +902,8 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
           // Lightbulb button - Yeni ilham ekle
           GestureDetector(
             onTap: () {
-              _showAddInspirationDialog(context);
+              print('➕ + butonuna basıldı');
+              _showAddInspirationDialog(context, ref);
             },
             child: Container(
               width: 40,
@@ -1046,6 +1115,13 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
     );
   }
 
+  // Düzenleme işlemi
+  void _editQuote(InspirationEntry quote) {
+    _newQuoteController.text = quote.text;
+    _newAuthorController.text = quote.author ?? '';
+    _showAddInspirationDialog(context, ref);
+  }
+
   /// ✅ Action Button - Tıklanabilir
   Widget _buildActionButton(IconData icon, VoidCallback onTap) {
     return GestureDetector(
@@ -1059,6 +1135,46 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
           border: Border.all(color: Colors.grey.shade300, width: 1),
         ),
         child: Icon(icon, size: 24, color: Colors.grey.shade700),
+      ),
+    );
+  }
+
+  /// ✅ İstatistik Öğesi
+  Widget _buildStatItem({
+    required IconData icon,
+    required int count,
+    required String label,
+    VoidCallback? onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: onTap != null ? Colors.white : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: onTap != null
+              ? Border.all(color: Colors.grey.shade300)
+              : null,
+        ),
+        child: Column(
+          children: [
+            Icon(icon, size: 20, color: Colors.grey.shade600),
+            const SizedBox(height: 4),
+            Text(
+              count.toString(),
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
+              ),
+            ),
+            Text(
+              label,
+              style: TextStyle(fontSize: 10, color: Colors.grey.shade600),
+            ),
+          ],
+        ),
       ),
     );
   }

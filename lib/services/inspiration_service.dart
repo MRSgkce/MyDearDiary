@@ -5,7 +5,7 @@ import 'dart:convert';
 class InspirationService {
   static const String _inspirationsKey = 'inspiration_quotes';
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static const String _collectionName = 'inspiration_quotes';
+  static const String _collectionName = 'inspirations';
 
   // Firebase'e ilham sözü ekle
   static Future<void> addInspirationToFirebase(
@@ -16,14 +16,19 @@ class InspirationService {
         'text': inspiration['text'],
         'author': inspiration['author'],
         'likes': 0,
+        'shares': 0,
+        'category': inspiration['category'] ?? 'Genel',
+        'tags': inspiration['tags'] ?? [],
+        'imageUrl': inspiration['imageUrl'],
+        'isFavorite': false,
         'createdAt': Timestamp.now(),
         'updatedAt': Timestamp.now(),
       };
 
       await _firestore.collection(_collectionName).add(inspirationData);
-      print('İlham sözü Firebase\'e başarıyla kaydedildi');
+      print('✅ İlham sözü Firebase\'e başarıyla kaydedildi');
     } catch (e) {
-      print('Firebase\'e ilham kayıt hatası: $e');
+      print('❌ Firebase\'e ilham kayıt hatası: $e');
       rethrow;
     }
   }
@@ -32,10 +37,13 @@ class InspirationService {
   static Future<List<Map<String, dynamic>>>
   getAllInspirationsFromFirebase() async {
     try {
+      print('🔥 Firebase\'den veri çekiliyor...');
       final QuerySnapshot snapshot = await _firestore
           .collection(_collectionName)
           .orderBy('createdAt', descending: true)
           .get();
+
+      print('📊 Firebase\'den ${snapshot.docs.length} document geldi');
 
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
@@ -44,6 +52,17 @@ class InspirationService {
           'text': data['text'],
           'author': data['author'],
           'likes': data['likes'] ?? 0,
+          'shares': data['shares'] ?? 0,
+          'category': data['category'] ?? 'Genel',
+          'tags':
+              (data['tags'] as List<dynamic>?)
+                  ?.map((e) => e.toString())
+                  .toList() ??
+              [],
+          'imageUrl': data['imageUrl'],
+          'isFavorite': data['isFavorite'] ?? false,
+          'createdAt': data['createdAt']?.millisecondsSinceEpoch,
+          'updatedAt': data['updatedAt']?.millisecondsSinceEpoch,
         };
       }).toList();
     } catch (e) {
@@ -59,9 +78,9 @@ class InspirationService {
         'likes': FieldValue.increment(1),
         'updatedAt': Timestamp.now(),
       });
-      print('İlham sözü beğenildi');
+      print('✅ İlham beğenildi: $id');
     } catch (e) {
-      print('Beğenme hatası: $e');
+      print('❌ Beğeni hatası: $e');
       rethrow;
     }
   }
@@ -102,37 +121,28 @@ class InspirationService {
     await prefs.setString(_inspirationsKey, inspirationsJson);
   }
 
-  // Hibrit sistem - önce Firebase'den dene, sonra local
+  // Sadece Firebase kullan
   static Future<List<Map<String, dynamic>>> getAllInspirations() async {
     try {
       final firebaseInspirations = await getAllInspirationsFromFirebase();
-      if (firebaseInspirations.isNotEmpty) {
-        return firebaseInspirations;
-      }
+      return firebaseInspirations;
     } catch (e) {
-      print('Firebase bağlantı hatası, local storage kullanılıyor: $e');
+      print('Firebase bağlantı hatası: $e');
+      return [];
     }
-
-    return await getAllInspirationsFromLocal();
   }
 
-  // Hibrit sistem - Firebase + Local
+  // Sadece Firebase kullan
   static Future<void> addInspiration(Map<String, dynamic> inspiration) async {
+    print('🔥 Service addInspiration başladı');
     try {
+      print('📤 Firebase\'e gönderiliyor...');
       await addInspirationToFirebase(inspiration);
+      print('✅ İlham sözü Firebase\'e başarıyla kaydedildi');
     } catch (e) {
-      print('Firebase kayıt başarısız, local storage kullanılıyor: $e');
+      print('❌ Firebase kayıt hatası: $e');
+      rethrow;
     }
-
-    // Local storage'a da kaydet
-    final inspirations = await getAllInspirationsFromLocal();
-    // ID ekle (local storage için)
-    final inspirationWithId = {
-      ...inspiration,
-      'id': DateTime.now().millisecondsSinceEpoch.toString(),
-    };
-    inspirations.add(inspirationWithId);
-    await saveInspirationsToLocal(inspirations);
   }
 
   // Provider için uyumlu metodlar
@@ -159,6 +169,38 @@ class InspirationService {
       print('İlham sözü güncellendi');
     } catch (e) {
       print('Güncelleme hatası: $e');
+      rethrow;
+    }
+  }
+
+  // Paylaşım işlemi
+  static Future<void> shareInspiration(String id) async {
+    try {
+      await _firestore.collection(_collectionName).doc(id).update({
+        'shares': FieldValue.increment(1),
+        'updatedAt': Timestamp.now(),
+      });
+      print('✅ İlham paylaşıldı: $id');
+    } catch (e) {
+      print('❌ Paylaşım hatası: $e');
+      rethrow;
+    }
+  }
+
+  // Favori işlemi
+  static Future<void> toggleFavorite(String id) async {
+    try {
+      final doc = await _firestore.collection(_collectionName).doc(id).get();
+      if (doc.exists) {
+        final currentFavorite = doc.data()?['isFavorite'] ?? false;
+        await _firestore.collection(_collectionName).doc(id).update({
+          'isFavorite': !currentFavorite,
+          'updatedAt': Timestamp.now(),
+        });
+        print('✅ Favori durumu değiştirildi: $id');
+      }
+    } catch (e) {
+      print('❌ Favori hatası: $e');
       rethrow;
     }
   }
