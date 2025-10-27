@@ -12,9 +12,10 @@ class MoodService {
   static Future<void> saveMoodToFirebase(MoodEntry moodEntry) async {
     try {
       final moodData = moodEntry.toJson();
-      moodData['createdAt'] = Timestamp.now();
-      moodData['updatedAt'] = Timestamp.now();
-      
+      // Firebase için Timestamp kullan
+      moodData['createdAt'] = Timestamp.fromDate(moodEntry.createdAt);
+      moodData['date'] = Timestamp.fromDate(moodEntry.date);
+
       await _firestore.collection(_collectionName).add(moodData);
       print('Mood Firebase\'e başarıyla kaydedildi');
     } catch (e) {
@@ -31,7 +32,7 @@ class MoodService {
     } catch (e) {
       print('Firebase mood kayıt başarısız, local storage kullanılıyor: $e');
     }
-    
+
     // Local storage'a da kaydet (backup için)
     final moods = await getAllMoods();
     moods.add(moodEntry);
@@ -41,17 +42,23 @@ class MoodService {
   // Firebase'den tüm mood'ları getir
   static Future<List<MoodEntry>> getAllMoodsFromFirebase() async {
     try {
+      print('🔍 Firebase\'den mood\'lar çekiliyor...');
       final QuerySnapshot snapshot = await _firestore
           .collection(_collectionName)
           .orderBy('createdAt', descending: true)
           .get();
-      
+
+      print('📊 Firebase\'den ${snapshot.docs.length} mood geldi');
+
       return snapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
-        return MoodEntry.fromJson(data);
+        print('📦 Mood data: $data');
+        final mood = MoodEntry.fromJson(data);
+        print('✅ Mood oluşturuldu: ${mood.mood}');
+        return mood;
       }).toList();
     } catch (e) {
-      print('Firebase\'den mood\'lar getirilirken hata: $e');
+      print('❌ Firebase\'den mood\'lar getirilirken hata: $e');
       return [];
     }
   }
@@ -67,7 +74,7 @@ class MoodService {
     } catch (e) {
       print('Firebase bağlantı hatası, local storage kullanılıyor: $e');
     }
-    
+
     // Firebase başarısız olursa local storage'dan al
     final prefs = await SharedPreferences.getInstance();
     final String? moodsJson = prefs.getString(_moodsKey);
@@ -96,7 +103,7 @@ class MoodService {
   static Future<MoodEntry?> getTodaysMood() async {
     final moods = await getAllMoods();
     final today = DateTime.now();
-    
+
     for (final mood in moods) {
       if (mood.date.year == today.year &&
           mood.date.month == today.month &&

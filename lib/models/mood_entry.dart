@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class MoodEntry {
   final String id;
   final String mood;
@@ -19,14 +21,25 @@ class MoodEntry {
 
   // JSON'dan MoodEntry oluştur
   factory MoodEntry.fromJson(Map<String, dynamic> json) {
+    // Firebase Timestamp'i düzgün işle
+    DateTime parseDateTime(dynamic value) {
+      if (value is Timestamp) {
+        return value.toDate();
+      } else if (value is int) {
+        return DateTime.fromMillisecondsSinceEpoch(value);
+      } else {
+        return DateTime.now(); // Fallback
+      }
+    }
+
     return MoodEntry(
       id: json['id'] as String,
       mood: json['mood'] as String,
       emoji: json['emoji'] as String,
       journalPrompt1: json['journalPrompt1'] as String?,
       journalPrompt2: json['journalPrompt2'] as String?,
-      date: DateTime.fromMillisecondsSinceEpoch(json['date'] as int),
-      createdAt: DateTime.fromMillisecondsSinceEpoch(json['createdAt'] as int),
+      date: parseDateTime(json['date']),
+      createdAt: parseDateTime(json['createdAt']),
     );
   }
 
