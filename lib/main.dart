@@ -1242,11 +1242,20 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
         right: 20,
       ),
       decoration: BoxDecoration(
-        color: Colors.grey.shade900,
+        color: const Color(0xFFE8E8E8), // Kırık beyaz gri
         borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
+          topLeft: Radius.circular(30),
+          topRight: Radius.circular(30),
+          bottomLeft: Radius.circular(30),
+          bottomRight: Radius.circular(30),
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, -2),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1270,28 +1279,63 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
           _selectedIndex = index;
         });
       },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: isSelected ? Colors.grey.shade300 : Colors.transparent,
-              borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? Colors.grey.shade200 : Colors.transparent,
+          borderRadius: BorderRadius.circular(25),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            icon == Icons.lightbulb
+                ? Image.asset(
+                    'assets/images/Idea2.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.contain,
+                  )
+                : icon == Icons.favorite_border
+                ? Image.asset(
+                    'assets/images/Diary.png',
+                    width: 36,
+                    height: 36,
+                    fit: BoxFit.contain,
+                  )
+                : icon == Icons.self_improvement
+                ? Image.asset(
+                    'assets/images/Floating.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.contain,
+                  )
+                : icon == Icons.person_outline
+                ? Image.asset(
+                    'assets/images/profile.png',
+                    width: 40,
+                    height: 40,
+                    fit: BoxFit.contain,
+                  )
+                : Icon(
+                    icon,
+                    size: 28,
+                    color: isSelected
+                        ? const Color(0xFF4A90E2)
+                        : Colors.grey.shade600,
+                  ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                color: isSelected
+                    ? const Color(0xFF4A90E2)
+                    : Colors.grey.shade600,
+              ),
             ),
-            child: Icon(icon, size: 20, color: Colors.white),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
