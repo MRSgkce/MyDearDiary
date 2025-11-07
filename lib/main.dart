@@ -101,7 +101,7 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
   final TextEditingController _newAuthorController = TextEditingController();
   final TextEditingController _newCategoryController = TextEditingController();
   final TextEditingController _newTagsController = TextEditingController();
-  final PageController _pageController = PageController();
+  final PageController _pageController = PageController(); // İlham quote'ları için
   int _currentPageIndex = 0;
 
   @override
@@ -119,474 +119,206 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
     super.dispose();
   }
 
-  // Mood için emoji mapping
-  String _getEmojiForMood(String mood) {
-    switch (mood) {
-      case 'Mutlu':
-        return '😊';
-      case 'Sevgi Dolu':
-        return '❤️';
-      case 'Enerjik':
-        return '✨';
-      case 'Normal':
-        return '😌';
-      case 'Hüzünlü':
-        return '😢';
-      case 'Stresli':
-        return '😰';
-      case 'Yorgun':
-        return '😴';
-      case 'Huzurlu':
-        return '😌';
-      default:
-        return '😊';
-    }
-  }
-
-  // Ay ismi döndür
-  String _getMonthName(int month) {
-    const months = [
-      'Oca',
-      'Şub',
-      'Mar',
-      'Nis',
-      'May',
-      'Haz',
-      'Tem',
-      'Ağu',
-      'Eyl',
-      'Eki',
-      'Kas',
-      'Ara',
-    ];
-    return months[month - 1];
-  }
-
   @override
   Widget build(BuildContext context) {
+    // Telefon container kaldırıldı - direkt ekrana yerleştirildi
     return Scaffold(
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // ✅ Main Content
-          Expanded(child: _buildContentForTab(context, _selectedIndex)),
+          // Status Bar Area
+          _buildStatusBar(context),
 
-          // ✅ Bottom Navigation
+          // Main Content Area - Slide Transition ile
+          Expanded(
+            child: _buildTabContentWithAnimation(context),
+          ),
+
+          // Bottom Navigation
           _buildBottomNavigation(context),
         ],
       ),
     );
   }
 
-  /// ✅ Tab içeriği
-  Widget _buildContentForTab(BuildContext context, int index) {
-    switch (index) {
-      case 0:
-        return _buildMainContent(context); // İlham
-      case 1:
-        return _buildMoodContent(context); // Ruh Hali
-      case 2:
-        return _buildMeditationContent(context); // Meditasyon
-      case 3:
-        return _buildProfileContent(context); // Profil
-      default:
-        return _buildMainContent(context);
-    }
-  }
-
-  /// ✅ Mood Content - Resimdeki gibi
-  Widget _buildMoodContent(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+  /// Status Bar Area - Sadece lightbulb butonu (saat cihazın kendi status bar'ında)
+  Widget _buildStatusBar(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        top: MediaQuery.of(context).padding.top + 16, // Status bar + padding
+        bottom: 16, // pb-4 = 16px
+        left: 32, // px-8 = 32px
+        right: 32,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end, // Sağa hizala
         children: [
-          const SizedBox(height: 50),
-
-          // ✅ Başlık
-          Text(
-            'Bugün Nasıl Hissediyorsun?',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
+          // Lightbulb Button
+          GestureDetector(
+            onTap: () {
+              _showAddInspirationDialog(context, ref);
+            },
+            child: Container(
+              width: 40, // w-10 = 40px
+              height: 40, // h-10 = 40px
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+              ),
+              child: Icon(
+                Icons.lightbulb_outline,
+                size: 20, // w-5 = 20px
+                color: Colors.grey.shade700,
+              ),
             ),
           ),
-
-          const SizedBox(height: 8),
-
-          Text(
-            'halini seç ve kaydet',
-            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
-          ),
-
-          const SizedBox(height: 30),
-
-          // ✅ Mood Grid
-          _buildMoodGrid(context),
-
-          const SizedBox(height: 40),
-
-          // ✅ Journal Prompts
-          _buildJournalPrompts(context),
-
-          const SizedBox(height: 30),
-
-          // ✅ Save Button
-          _buildSaveButton(context),
-
-          const SizedBox(height: 40),
-
-          // ✅ Past Records
-          _buildPastRecords(context),
-
-          const SizedBox(height: 100), // Bottom padding
         ],
       ),
     );
   }
 
-  /// ✅ Meditation Content
-  Widget _buildMeditationContent(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Meditasyon Sayfası',
-        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  /// ✅ Profile Content
-  Widget _buildProfileContent(BuildContext context) {
-    return const Center(
-      child: Text(
-        'Profil Sayfası',
-        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  /// ✅ Mood Grid - Resimdeki gibi
-  Widget _buildMoodGrid(BuildContext context) {
-    final moods = [
-      {
-        'icon': Icons.wb_sunny,
-        'label': 'Mutlu',
-        'color': Colors.yellow.shade300,
-      },
-      {
-        'icon': Icons.favorite_border,
-        'label': 'Sevgi Dolu',
-        'color': Colors.pink.shade300,
-      },
-      {
-        'icon': Icons.auto_awesome,
-        'label': 'Enerjik',
-        'color': Colors.purple.shade300,
-      },
-      {
-        'icon': Icons.sentiment_neutral,
-        'label': 'Normal',
-        'color': Colors.grey.shade200,
-      },
-      {'icon': Icons.cloud, 'label': 'Hüzünlü', 'color': Colors.blue.shade300},
-      {
-        'icon': Icons.sentiment_dissatisfied,
-        'label': 'Stresli',
-        'color': Colors.red.shade300,
-      },
-      {
-        'icon': Icons.nightlight_round,
-        'label': 'Yorgun',
-        'color': Colors.indigo.shade300,
-      },
-      {
-        'icon': Icons.sentiment_satisfied,
-        'label': 'Huzurlu',
-        'color': Colors.green.shade300,
-      },
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10,
-        childAspectRatio: 0.8,
-      ),
-      itemCount: moods.length,
-      itemBuilder: (context, index) {
-        final mood = moods[index];
-        return GestureDetector(
-          onTap: () {
-            setState(() {
-              _selectedMood = mood['label'] as String;
-              _selectedEmoji = _getEmojiForMood(mood['label'] as String);
-            });
-          },
-          child: Container(
-            decoration: BoxDecoration(
-              color: mood['color'] as Color,
-              borderRadius: BorderRadius.circular(12),
-              border: _selectedMood == mood['label']
-                  ? Border.all(color: Colors.black, width: 3)
-                  : null,
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(mood['icon'] as IconData, size: 30, color: Colors.white),
-                const SizedBox(height: 8),
-                Text(
-                  mood['label'] as String,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    color: Colors.white,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
+  /// ✅ Tab içeriği - Fade Transition ile animasyonlu (aradaki sayfalar görünmez)
+  Widget _buildTabContentWithAnimation(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 300),
+      transitionBuilder: (Widget child, Animation<double> animation) {
+        return FadeTransition(
+          opacity: animation,
+          child: child,
         );
       },
+      child: _buildCurrentTabContent(context),
     );
   }
 
-  /// ✅ Journal Prompts - Resimdeki gibi
-  Widget _buildJournalPrompts(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // ✅ İlk prompt
-        Text(
-          'Bugün neyi iyi yaptım? ✨',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade800,
-          ),
+  /// ✅ Mevcut tab içeriğini döndür
+  Widget _buildCurrentTabContent(BuildContext context) {
+    switch (_selectedIndex) {
+      case 0:
+        return _buildMainContent(
+          key: const ValueKey('inspiration'),
+          context,
+        ); // İlham
+      case 1:
+        return _AnimatedMoodContent(
+          key: const ValueKey('mood'),
+          isActive: true,
+          onMoodSelected: (mood, emoji) {
+            setState(() {
+              _selectedMood = mood;
+              _selectedEmoji = emoji;
+            });
+          },
+          selectedMood: _selectedMood,
+          prompt1Controller: _prompt1Controller,
+          prompt2Controller: _prompt2Controller,
+          onSave: () => _saveMood(context),
+        ); // Ruh Hali
+      case 2:
+        return _buildMeditationContent(
+          key: const ValueKey('meditation'),
+          context,
+        ); // Meditasyon
+      case 3:
+        return _buildProfileContent(
+          key: const ValueKey('profile'),
+          context,
+        ); // Profil
+      default:
+        return _buildMainContent(
+          key: const ValueKey('inspiration'),
+          context,
+        );
+    }
+  }
+
+
+  /// ✅ Meditation Content - React tasarımına göre
+  Widget _buildMeditationContent(BuildContext context, {Key? key}) {
+    return Center(
+      key: key,
+      child: Text(
+        'Meditasyon - Çok Yakında',
+        style: TextStyle(
+          fontSize: 16,
+          color: Colors.grey.shade400,
         ),
+      ),
+    );
+  }
 
-        const SizedBox(height: 12),
-
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: TextField(
-            controller: _prompt1Controller,
-            decoration: InputDecoration(
-              hintText: 'Bugün başardığın şeyleri yaz...',
-              hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-              border: InputBorder.none,
-            ),
-            maxLines: 3,
-          ),
+  /// ✅ Profile Content - React tasarımına göre
+  Widget _buildProfileContent(BuildContext context, {Key? key}) {
+    return Center(
+      key: key,
+      child: Text(
+        'Profil - Çok Yakında',
+        style: TextStyle(
+          fontSize: 16,
+          color: Colors.grey.shade400,
         ),
-
-        const SizedBox(height: 24),
-
-        // ✅ İkinci prompt
-        Text(
-          'Neyi geliştirebilirim? 💭',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey.shade800,
-          ),
-        ),
-
-        const SizedBox(height: 12),
-
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.grey.shade50,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.grey.shade200),
-          ),
-          child: TextField(
-            controller: _prompt2Controller,
-            decoration: InputDecoration(
-              hintText: 'Geliştirebileceğin alanları düşün...',
-              hintStyle: TextStyle(fontSize: 14, color: Colors.grey.shade500),
-              border: InputBorder.none,
-            ),
-            maxLines: 3,
-          ),
-        ),
-      ],
+      ),
     );
   }
 
   /// ✅ Save Button - Firebase ile kaydet
-  Widget _buildSaveButton(BuildContext context) {
-    return GestureDetector(
-      onTap: () async {
-        if (_selectedMood == null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Lütfen bir ruh hali seçin'),
-              backgroundColor: Colors.red,
-            ),
-          );
-          return;
-        }
-
-        try {
-          final moodEntry = MoodEntry(
-            id: MoodService.generateId(),
-            mood: _selectedMood!,
-            emoji: _selectedEmoji!,
-            journalPrompt1: _prompt1Controller.text.isNotEmpty
-                ? _prompt1Controller.text
-                : null,
-            journalPrompt2: _prompt2Controller.text.isNotEmpty
-                ? _prompt2Controller.text
-                : null,
-            date: DateTime.now(),
-            createdAt: DateTime.now(),
-          );
-
-          await MoodService.saveMood(moodEntry);
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ruh haliniz başarıyla kaydedildi!'),
-              backgroundColor: Colors.green,
-            ),
-          );
-
-          // Formu temizle
-          _prompt1Controller.clear();
-          _prompt2Controller.clear();
-          setState(() {
-            _selectedMood = null;
-            _selectedEmoji = null;
-          });
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Kayıt sırasında hata oluştu: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      },
-      child: Container(
-        width: double.infinity,
-        height: 50,
-        decoration: BoxDecoration(
-          color: Colors.grey.shade900,
-          borderRadius: BorderRadius.circular(12),
+  Future<void> _saveMood(BuildContext context) async {
+    if (_selectedMood == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Lütfen bir ruh hali seçin'),
+          backgroundColor: Colors.red,
         ),
-        child: const Center(
-          child: Text(
-            'Kaydet',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-            ),
-          ),
+      );
+      return;
+    }
+
+    try {
+      final moodEntry = MoodEntry(
+        id: MoodService.generateId(),
+        mood: _selectedMood!,
+        emoji: _selectedEmoji!,
+        journalPrompt1: _prompt1Controller.text.isNotEmpty
+            ? _prompt1Controller.text
+            : null,
+        journalPrompt2: _prompt2Controller.text.isNotEmpty
+            ? _prompt2Controller.text
+            : null,
+        date: DateTime.now(),
+        createdAt: DateTime.now(),
+      );
+
+      await MoodService.saveMood(moodEntry);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Ruh haliniz başarıyla kaydedildi!'),
+          backgroundColor: Colors.green,
         ),
-      ),
-    );
-  }
+      );
 
-  /// ✅ Past Records - Firebase'den dinamik
-  Widget _buildPastRecords(BuildContext context) {
-    return FutureBuilder<List<MoodEntry>>(
-      future: MoodService.getAllMoods(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return Text('Hata: ${snapshot.error}');
-        }
-
-        final records = snapshot.data ?? [];
-        final recentRecords = records.take(5).toList(); // Son 5 kayıt
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Geçmiş Kayıtlar',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            if (recentRecords.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Henüz kayıt yok. İlk kaydınızı oluşturun!',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                ),
-              )
-            else
-              ...recentRecords
-                  .map(
-                    (record) => Container(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            record.emoji,
-                            style: const TextStyle(fontSize: 24),
-                          ),
-                          const SizedBox(width: 12),
-                          Text(
-                            record.mood,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: Colors.grey.shade800,
-                            ),
-                          ),
-                          const Spacer(),
-                          Text(
-                            '${record.date.day} ${_getMonthName(record.date.month)}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                  .toList(),
-          ],
-        );
-      },
-    );
+      // Formu temizle
+      _prompt1Controller.clear();
+      _prompt2Controller.clear();
+      setState(() {
+        _selectedMood = null;
+        _selectedEmoji = null;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Kayıt sırasında hata oluştu: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   // Adaptive alert dialog helper
@@ -939,45 +671,15 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
   }
 
   /// ✅ Main Content - Kayan sayfa (PageView)
-  Widget _buildMainContent(BuildContext context) {
-    // Sağ üste ekleme butonu
-    return Stack(
-      children: [
-        // Ana içerik
-        _buildInspirationPageView(context),
-
-        // Sağ üste ekleme butonu
-        Positioned(
-          top: 80, // Status bar'dan sonra daha fazla boşluk
-          right: 20,
-          child: GestureDetector(
-            onTap: () {
-              print('➕ Ekle butonuna basıldı');
-              _showAddInspirationDialog(context, ref);
-            },
-            child: Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey.shade300, width: 1),
-              ),
-              child: Icon(
-                Icons.lightbulb_outline,
-                size: 20,
-                color: Colors.grey.shade700,
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
+  Widget _buildMainContent(BuildContext context, {Key? key}) {
+    // Status bar'da lightbulb butonu var, burada ekstra buton kaldırıldı
+    return _buildInspirationPageView(key: key, context: context);
   }
 
-  Widget _buildInspirationPageView(BuildContext context) {
+  Widget _buildInspirationPageView({required BuildContext context, Key? key}) {
     if (widget.inspirations.isEmpty) {
       return Padding(
+        key: key,
         padding: const EdgeInsets.only(top: 20),
         child: Center(
           child: Column(
@@ -1009,6 +711,7 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
     }
 
     return Padding(
+      key: key,
       padding: const EdgeInsets.only(top: 20),
       child: PageView.builder(
         controller: _pageController,
@@ -1022,93 +725,12 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
         },
         itemBuilder: (context, index) {
           final quote = widget.inspirations[index];
-          return _buildInspirationPage(context, quote, index);
+          return _AnimatedInspirationPage(
+            quote: quote,
+            onDelete: () => _deleteQuote(context, quote),
+            onCopy: () => _copyQuote(context, quote),
+          );
         },
-      ),
-    );
-  }
-
-  /// ✅ İlham Sayfası
-  Widget _buildInspirationPage(
-    BuildContext context,
-    InspirationEntry quote,
-    int index,
-  ) {
-    return Container(
-      height: MediaQuery.of(context).size.height, // Tam ekran yükseklik
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // ✅ Quote Icon - Sadece ikon, numara yok
-          Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(50),
-            ),
-            child: Icon(
-              Icons.format_quote,
-              size: 50,
-              color: Colors.grey.shade400,
-            ),
-          ),
-
-          const SizedBox(height: 40),
-
-          // ✅ Quote Text
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
-            child: Text(
-              quote.text,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w600,
-                height: 1.4,
-                color: Colors.grey.shade800,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 30),
-
-          // ✅ Author
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              quote.author ?? '— Anonim',
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey.shade700,
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 50),
-
-          // ✅ Action Buttons
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              _buildActionButton(
-                Icons.delete_outline,
-                () => _deleteQuote(context, quote),
-              ),
-              const SizedBox(width: 30),
-              _buildActionButton(Icons.copy, () => _copyQuote(context, quote)),
-            ],
-          ),
-
-          const SizedBox(height: 40),
-        ],
       ),
     );
   }
@@ -1260,9 +882,9 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildNavItem(Icons.lightbulb, 'İlham', 0),
-          _buildNavItem(Icons.favorite_border, 'Ruh Hali', 1),
-          _buildNavItem(Icons.self_improvement, 'Meditasyon', 2),
+          _buildNavItem(Icons.lightbulb_outline, 'İlham', 0),
+          _buildNavItem(Icons.favorite_outline, 'Ruh Hali', 1),
+          _buildNavItem(Icons.local_florist_outlined, 'Meditasyon', 2),
           _buildNavItem(Icons.person_outline, 'Profil', 3),
         ],
       ),
@@ -1275,6 +897,7 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
 
     return GestureDetector(
       onTap: () {
+        // Direkt tab değiştir (aradaki sayfalar görünmez)
         setState(() {
           _selectedIndex = index;
         });
@@ -1288,41 +911,13 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            icon == Icons.lightbulb
-                ? Image.asset(
-                    'assets/images/Idea2.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  )
-                : icon == Icons.favorite_border
-                ? Image.asset(
-                    'assets/images/Diary.png',
-                    width: 36,
-                    height: 36,
-                    fit: BoxFit.contain,
-                  )
-                : icon == Icons.self_improvement
-                ? Image.asset(
-                    'assets/images/Floating.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  )
-                : icon == Icons.person_outline
-                ? Image.asset(
-                    'assets/images/profile.png',
-                    width: 40,
-                    height: 40,
-                    fit: BoxFit.contain,
-                  )
-                : Icon(
-                    icon,
-                    size: 28,
-                    color: isSelected
-                        ? const Color(0xFF4A90E2)
-                        : Colors.grey.shade600,
-                  ),
+            Icon(
+              icon,
+              size: 28,
+              color: isSelected
+                  ? const Color(0xFF4A90E2)
+                  : Colors.grey.shade600,
+            ),
             const SizedBox(height: 4),
             Text(
               label,
@@ -1337,6 +932,803 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// ✅ Animasyonlu İlham Sayfası - Fade Slide Up Animasyonu
+class _AnimatedInspirationPage extends StatefulWidget {
+  final InspirationEntry quote;
+  final VoidCallback onDelete;
+  final VoidCallback onCopy;
+
+  const _AnimatedInspirationPage({
+    required this.quote,
+    required this.onDelete,
+    required this.onCopy,
+  });
+
+  @override
+  State<_AnimatedInspirationPage> createState() =>
+      _AnimatedInspirationPageState();
+}
+
+class _AnimatedInspirationPageState extends State<_AnimatedInspirationPage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+
+    // Fade animasyonu (0'dan 1'e)
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOut,
+    ));
+
+    // Slide animasyonu (aşağıdan yukarıya)
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 0.3), // %30 aşağıdan başla
+      end: Offset.zero, // Normal pozisyona gel
+    ).animate(CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeOutCubic,
+    ));
+
+    // Animasyonu başlat
+    _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+      child: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // ✅ Quote Icon
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(50),
+                ),
+                child: Icon(
+                  Icons.format_quote,
+                  size: 50,
+                  color: Colors.grey.shade400,
+                ),
+              ),
+
+              const SizedBox(height: 40),
+
+              // ✅ Quote Text
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 40),
+                child: Text(
+                  widget.quote.text,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
+                    color: Colors.grey.shade800,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
+              // ✅ Author
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Text(
+                  widget.quote.author ?? '— Anonim',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.grey.shade700,
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 50),
+
+              // ✅ Action Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _buildActionButton(
+                    Icons.delete_outline,
+                    widget.onDelete,
+                  ),
+                  const SizedBox(width: 30),
+                  _buildActionButton(Icons.copy, widget.onCopy),
+                ],
+              ),
+
+              const SizedBox(height: 40),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActionButton(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 50,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade100,
+          borderRadius: BorderRadius.circular(25),
+          border: Border.all(color: Colors.grey.shade300, width: 1),
+        ),
+        child: Icon(icon, size: 24, color: Colors.grey.shade700),
+      ),
+    );
+  }
+}
+
+/// ✅ Animasyonlu Mood Content
+class _AnimatedMoodContent extends StatefulWidget {
+  final Function(String, String) onMoodSelected;
+  final String? selectedMood;
+  final TextEditingController prompt1Controller;
+  final TextEditingController prompt2Controller;
+  final VoidCallback onSave;
+  final bool isActive;
+
+  const _AnimatedMoodContent({
+    required this.onMoodSelected,
+    required this.selectedMood,
+    required this.prompt1Controller,
+    required this.prompt2Controller,
+    required this.onSave,
+    required this.isActive,
+    super.key,
+  });
+
+  @override
+  State<_AnimatedMoodContent> createState() => _AnimatedMoodContentState();
+}
+
+class _AnimatedMoodContentState extends State<_AnimatedMoodContent>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500), // Daha uzun süre, tüm animasyonlar için yeterli
+    );
+    // Sadece aktif ise animasyonu başlat
+    if (widget.isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          try {
+            _controller.forward();
+          } catch (e) {
+            // Hata durumunda sessizce devam et
+          }
+        }
+      });
+    } else {
+      // Hemen görünür yap
+      _controller.value = 1.0;
+    }
+  }
+
+  @override
+  void didUpdateWidget(_AnimatedMoodContent oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!mounted) return;
+    
+    // Eğer tab aktif hale geldiyse animasyonu başlat
+    if (widget.isActive && !oldWidget.isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          try {
+            if (_controller.isAnimating) {
+              _controller.stop();
+            }
+            _controller.reset();
+            _controller.forward();
+          } catch (e) {
+            // Controller zaten dispose edilmiş, hata yok say
+          }
+        }
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    if (_controller.isAnimating) {
+      _controller.stop();
+    }
+    _controller.dispose();
+    super.dispose();
+  }
+
+  String _getEmojiForMood(String mood) {
+    switch (mood) {
+      case 'Mutlu':
+        return '😊';
+      case 'Sevgi Dolu':
+        return '❤️';
+      case 'Enerjik':
+        return '✨';
+      case 'Normal':
+        return '😌';
+      case 'Hüzünlü':
+        return '😢';
+      case 'Stresli':
+        return '😰';
+      case 'Yorgun':
+        return '😴';
+      case 'Huzurlu':
+        return '😌';
+      default:
+        return '😊';
+    }
+  }
+
+  String _getMonthName(int month) {
+    const months = [
+      'Oca',
+      'Şub',
+      'Mar',
+      'Nis',
+      'May',
+      'Haz',
+      'Tem',
+      'Ağu',
+      'Eyl',
+      'Eki',
+      'Kas',
+      'Ara',
+    ];
+    return months[month - 1];
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 50),
+          // ✅ Başlık
+          Text(
+            'Bugün Nasıl Hissediyorsun?',
+            style: TextStyle(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: Colors.grey.shade800,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'halini seç ve kaydet',
+            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+          ),
+          const SizedBox(height: 30),
+          // ✅ Animasyonlu Mood Grid
+          _buildAnimatedMoodGrid(context),
+          const SizedBox(height: 40),
+          // ✅ Animasyonlu Journal Prompts
+          _buildAnimatedJournalPrompts(context),
+          const SizedBox(height: 30),
+          // ✅ Save Button
+          _buildSaveButton(context),
+          const SizedBox(height: 40),
+          // ✅ Animasyonlu Past Records
+          _buildAnimatedPastRecords(context),
+          const SizedBox(height: 100),
+        ],
+      ),
+    );
+  }
+
+  /// ✅ Staggered Animation Mood Grid
+  Widget _buildAnimatedMoodGrid(BuildContext context) {
+    final moods = [
+      {
+        'icon': Icons.wb_sunny,
+        'label': 'Mutlu',
+        'color': Colors.yellow.shade300,
+      },
+      {
+        'icon': Icons.favorite_border,
+        'label': 'Sevgi Dolu',
+        'color': Colors.pink.shade300,
+      },
+      {
+        'icon': Icons.auto_awesome,
+        'label': 'Enerjik',
+        'color': Colors.purple.shade300,
+      },
+      {
+        'icon': Icons.sentiment_neutral,
+        'label': 'Normal',
+        'color': Colors.grey.shade200,
+      },
+      {'icon': Icons.cloud, 'label': 'Hüzünlü', 'color': Colors.blue.shade300},
+      {
+        'icon': Icons.sentiment_dissatisfied,
+        'label': 'Stresli',
+        'color': Colors.red.shade300,
+      },
+      {
+        'icon': Icons.nightlight_round,
+        'label': 'Yorgun',
+        'color': Colors.indigo.shade300,
+      },
+      {
+        'icon': Icons.sentiment_satisfied,
+        'label': 'Huzurlu',
+        'color': Colors.green.shade300,
+      },
+    ];
+
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 4,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 0.8,
+      ),
+      itemCount: moods.length,
+      itemBuilder: (context, index) {
+        final mood = moods[index];
+        // Her kart 0.05 saniye gecikmeli
+        final delay = index * 0.05;
+        return _StaggeredMoodCard(
+          animationController: _controller,
+          delay: delay,
+          mood: mood,
+          isSelected: widget.selectedMood == mood['label'] as String,
+          onTap: () {
+            widget.onMoodSelected(
+              mood['label'] as String,
+              _getEmojiForMood(mood['label'] as String),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  /// ✅ Cascade Animation Journal Prompts
+  Widget _buildAnimatedJournalPrompts(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // İlk prompt - 0.1s gecikme
+        _CascadeCard(
+          animationController: _controller,
+          delay: 0.1,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Bugün neyi iyi yaptım? ✨',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: TextField(
+                  controller: widget.prompt1Controller,
+                  decoration: InputDecoration(
+                    hintText: 'Bugün başardığın şeyleri yaz...',
+                    hintStyle:
+                        TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                    border: InputBorder.none,
+                  ),
+                  maxLines: 3,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 24),
+        // İkinci prompt - 0.2s gecikme
+        _CascadeCard(
+          animationController: _controller,
+          delay: 0.2,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Neyi geliştirebilirim? 💭',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey.shade800,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade50,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.grey.shade200),
+                ),
+                child: TextField(
+                  controller: widget.prompt2Controller,
+                  decoration: InputDecoration(
+                    hintText: 'Geliştirebileceğin alanları düşün...',
+                    hintStyle:
+                        TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                    border: InputBorder.none,
+                  ),
+                  maxLines: 3,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSaveButton(BuildContext context) {
+    return GestureDetector(
+      onTap: widget.onSave,
+      child: Container(
+        width: double.infinity,
+        height: 50,
+        decoration: BoxDecoration(
+          color: Colors.grey.shade900,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: const Center(
+          child: Text(
+            'Kaydet',
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// ✅ Slide Animation Past Records
+  Widget _buildAnimatedPastRecords(BuildContext context) {
+    return FutureBuilder<List<MoodEntry>>(
+      future: MoodService.getAllMoods(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Text('Hata: ${snapshot.error}');
+        }
+
+        final records = snapshot.data ?? [];
+        final recentRecords = records.take(5).toList();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Geçmiş Kayıtlar',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.shade800,
+              ),
+            ),
+            const SizedBox(height: 16),
+            if (recentRecords.isEmpty)
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.grey.shade100,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  'Henüz kayıt yok. İlk kaydınızı oluşturun!',
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                ),
+              )
+            else
+              ...recentRecords.asMap().entries.map(
+                    (entry) {
+                      final index = entry.key;
+                      final record = entry.value;
+                      // Her kart 0.05 saniye gecikmeli (daha kısa gecikme)
+                      final delay = 0.3 + (index * 0.05);
+                      return _SlideRecordCard(
+                        animationController: _controller,
+                        delay: delay,
+                        record: record,
+                        getMonthName: _getMonthName,
+                      );
+                    },
+                  ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+/// ✅ Staggered Mood Card - Fade + Scale Animation
+class _StaggeredMoodCard extends StatelessWidget {
+  final AnimationController animationController;
+  final double delay;
+  final Map<String, dynamic> mood;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _StaggeredMoodCard({
+    required this.animationController,
+    required this.delay,
+    required this.mood,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Interval'ı doğru hesapla (0.0-1.0 arası, toplam animasyon süresi 1.5 saniye)
+    final totalDuration = 1.5;
+    final startTime = (delay / totalDuration).clamp(0.0, 1.0);
+    final endTime = ((delay + 0.3) / totalDuration).clamp(0.0, 1.0);
+
+    final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: animationController,
+        curve: Interval(
+          startTime,
+          endTime,
+          curve: Curves.easeOut,
+        ),
+      ),
+    );
+
+    final scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(
+        parent: animationController,
+        curve: Interval(
+          startTime,
+          endTime,
+          curve: Curves.easeOut,
+        ),
+      ),
+    );
+
+    return AnimatedBuilder(
+      animation: animationController,
+      builder: (context, child) {
+        return Opacity(
+          opacity: animation.value,
+          child: Transform.scale(
+            scale: scaleAnimation.value,
+            child: GestureDetector(
+              onTap: onTap,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: mood['color'] as Color,
+                  borderRadius: BorderRadius.circular(12),
+                  border: isSelected
+                      ? Border.all(color: Colors.black, width: 3)
+                      : null,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(mood['icon'] as IconData,
+                        size: 30, color: Colors.white),
+                    const SizedBox(height: 8),
+                    Text(
+                      mood['label'] as String,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// ✅ Cascade Card - Fade Animation
+class _CascadeCard extends StatelessWidget {
+  final AnimationController animationController;
+  final double delay;
+  final Widget child;
+
+  const _CascadeCard({
+    required this.animationController,
+    required this.delay,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Interval'ı doğru hesapla (0.0-1.0 arası, toplam animasyon süresi 1.5 saniye)
+    final totalDuration = 1.5;
+    final startTime = (delay / totalDuration).clamp(0.0, 1.0);
+    final endTime = ((delay + 0.3) / totalDuration).clamp(0.0, 1.0);
+
+    final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: animationController,
+        curve: Interval(
+          startTime,
+          endTime,
+          curve: Curves.easeOut,
+        ),
+      ),
+    );
+
+    return AnimatedBuilder(
+      animation: animationController,
+      builder: (context, _) {
+        return Opacity(
+          opacity: animation.value,
+          child: child,
+        );
+      },
+    );
+  }
+}
+
+/// ✅ Slide Record Card - Slide + Fade Animation
+class _SlideRecordCard extends StatelessWidget {
+  final AnimationController animationController;
+  final double delay;
+  final MoodEntry record;
+  final String Function(int) getMonthName;
+
+  const _SlideRecordCard({
+    required this.animationController,
+    required this.delay,
+    required this.record,
+    required this.getMonthName,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Interval'ı doğru hesapla (0.0-1.0 arası, toplam animasyon süresi 1.5 saniye)
+    final totalDuration = 1.5;
+    final startTime = (delay / totalDuration).clamp(0.0, 1.0);
+    final endTime = ((delay + 0.3) / totalDuration).clamp(0.0, 1.0);
+
+    final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: animationController,
+        curve: Interval(
+          startTime,
+          endTime,
+          curve: Curves.easeOut,
+        ),
+      ),
+    );
+
+    final slideAnimation = Tween<Offset>(
+      begin: const Offset(-0.2, 0.0), // Soldan gel
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: animationController,
+        curve: Interval(
+          startTime,
+          endTime,
+          curve: Curves.easeOut,
+        ),
+      ),
+    );
+
+    return AnimatedBuilder(
+      animation: animationController,
+      builder: (context, _) {
+        final screenWidth = MediaQuery.of(context).size.width;
+        return Opacity(
+          opacity: fadeAnimation.value,
+          child: Transform.translate(
+            offset: Offset(
+              slideAnimation.value.dx * screenWidth,
+              0,
+            ),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    record.emoji,
+                    style: const TextStyle(fontSize: 24),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    record.mood,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.grey.shade800,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${record.date.day} ${getMonthName(record.date.month)}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
