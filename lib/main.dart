@@ -1418,9 +1418,12 @@ class _AnimatedMoodContentState extends State<_AnimatedMoodContent>
           const SizedBox(height: 6),
           Text(
             'halini seç ve kaydet',
-            style: TextStyle(fontSize: 16, color: Colors.grey.shade600),
+            style: TextStyle(
+              fontSize: 16,
+              color: Colors.grey.shade600,
+            ),
           ),
-          const SizedBox(height: 30),
+          const SizedBox(height: 20), // Boşluk artırıldı
           // ✅ Animasyonlu Mood Grid
           _buildAnimatedMoodGrid(context),
           const SizedBox(height: 40),
@@ -1482,6 +1485,7 @@ class _AnimatedMoodContentState extends State<_AnimatedMoodContent>
     return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
+      padding: EdgeInsets.zero, // Üst boşluğu kaldır
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 4,
         crossAxisSpacing: 10,
