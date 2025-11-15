@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
@@ -6,12 +7,20 @@ class InspirationService {
   static const String _inspirationsKey = 'inspiration_quotes';
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   static const String _collectionName = 'inspirations';
+  
+  // Mevcut kullanıcı ID'sini al
+  static String? get _currentUserId => FirebaseAuth.instance.currentUser?.uid;
 
   // Firebase'e ilham sözü ekle
   static Future<void> addInspirationToFirebase(
     Map<String, dynamic> inspiration,
   ) async {
     try {
+      final userId = _currentUserId;
+      if (userId == null) {
+        throw Exception('Kullanıcı giriş yapmamış');
+      }
+
       final inspirationData = {
         'text': inspiration['text'],
         'author': inspiration['author'],
@@ -21,34 +30,44 @@ class InspirationService {
         'tags': inspiration['tags'] ?? [],
         'imageUrl': inspiration['imageUrl'],
         'isFavorite': false,
+        'userId': userId, // Kullanıcı ID'si eklendi
         'createdAt': Timestamp.now(),
         'updatedAt': Timestamp.now(),
       };
 
       await _firestore.collection(_collectionName).add(inspirationData);
-      print('✅ İlham sözü Firebase\'e başarıyla kaydedildi');
+      print('✅ İlham sözü Firebase\'e başarıyla kaydedildi (userId: $userId)');
     } catch (e) {
       print('❌ Firebase\'e ilham kayıt hatası: $e');
       rethrow;
     }
   }
 
-  // Firebase'den tüm ilham sözlerini getir
+  // Firebase'den kullanıcıya özel ilham sözlerini getir
   static Future<List<Map<String, dynamic>>>
   getAllInspirationsFromFirebase() async {
     try {
+      final userId = _currentUserId;
+      if (userId == null) {
+        print('⚠️ Kullanıcı giriş yapmamış, boş liste döndürülüyor');
+        return [];
+      }
+
       print('🔥 Firebase\'den veri çekiliyor...');
       print('📋 Collection ismi: $_collectionName');
+      print('👤 Kullanıcı ID: $userId');
 
-      // Önce basit sorgu dene
+      // Kullanıcı ID'sine göre filtrele
       final QuerySnapshot snapshot = await _firestore
           .collection(_collectionName)
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
           .get();
 
       print('📊 Firebase\'den ${snapshot.docs.length} document geldi');
 
       if (snapshot.docs.isEmpty) {
-        print('⚠️ Collection boş! Firebase Console\'da kontrol edin');
+        print('⚠️ Bu kullanıcı için ilham sözü bulunamadı');
         return [];
       }
 
@@ -68,6 +87,7 @@ class InspirationService {
               [],
           'imageUrl': data['imageUrl'],
           'isFavorite': data['isFavorite'] ?? false,
+          'userId': data['userId'], // Kullanıcı ID'si
           'createdAt': data['createdAt']?.millisecondsSinceEpoch,
           'updatedAt': data['updatedAt']?.millisecondsSinceEpoch,
         };
@@ -78,9 +98,20 @@ class InspirationService {
     }
   }
 
-  // İlham sözü beğenme (Firebase)
+  // İlham sözü beğenme (Firebase) - Kullanıcı kontrolü ile
   static Future<void> likeInspiration(String id) async {
     try {
+      final userId = _currentUserId;
+      if (userId == null) {
+        throw Exception('Kullanıcı giriş yapmamış');
+      }
+
+      // Önce dokümanın bu kullanıcıya ait olduğunu kontrol et
+      final doc = await _firestore.collection(_collectionName).doc(id).get();
+      if (!doc.exists || doc.data()?['userId'] != userId) {
+        throw Exception('Bu ilham sözüne erişim yetkiniz yok');
+      }
+
       await _firestore.collection(_collectionName).doc(id).update({
         'likes': FieldValue.increment(1),
         'updatedAt': Timestamp.now(),
@@ -92,9 +123,20 @@ class InspirationService {
     }
   }
 
-  // İlham sözü silme (Firebase)
+  // İlham sözü silme (Firebase) - Kullanıcı kontrolü ile
   static Future<void> deleteInspiration(String id) async {
     try {
+      final userId = _currentUserId;
+      if (userId == null) {
+        throw Exception('Kullanıcı giriş yapmamış');
+      }
+
+      // Önce dokümanın bu kullanıcıya ait olduğunu kontrol et
+      final doc = await _firestore.collection(_collectionName).doc(id).get();
+      if (!doc.exists || doc.data()?['userId'] != userId) {
+        throw Exception('Bu ilham sözünü silme yetkiniz yok');
+      }
+
       await _firestore.collection(_collectionName).doc(id).delete();
       print('İlham sözü Firebase\'den silindi');
     } catch (e) {
@@ -168,6 +210,17 @@ class InspirationService {
     String? author,
   }) async {
     try {
+      final userId = _currentUserId;
+      if (userId == null) {
+        throw Exception('Kullanıcı giriş yapmamış');
+      }
+
+      // Önce dokümanın bu kullanıcıya ait olduğunu kontrol et
+      final doc = await _firestore.collection(_collectionName).doc(id).get();
+      if (!doc.exists || doc.data()?['userId'] != userId) {
+        throw Exception('Bu ilham sözünü güncelleme yetkiniz yok');
+      }
+
       await _firestore.collection(_collectionName).doc(id).update({
         'text': text,
         'author': author,
@@ -180,9 +233,20 @@ class InspirationService {
     }
   }
 
-  // Paylaşım işlemi
+  // Paylaşım işlemi - Kullanıcı kontrolü ile
   static Future<void> shareInspiration(String id) async {
     try {
+      final userId = _currentUserId;
+      if (userId == null) {
+        throw Exception('Kullanıcı giriş yapmamış');
+      }
+
+      // Önce dokümanın bu kullanıcıya ait olduğunu kontrol et
+      final doc = await _firestore.collection(_collectionName).doc(id).get();
+      if (!doc.exists || doc.data()?['userId'] != userId) {
+        throw Exception('Bu ilham sözünü paylaşma yetkiniz yok');
+      }
+
       await _firestore.collection(_collectionName).doc(id).update({
         'shares': FieldValue.increment(1),
         'updatedAt': Timestamp.now(),
@@ -194,18 +258,25 @@ class InspirationService {
     }
   }
 
-  // Favori işlemi
+  // Favori işlemi - Kullanıcı kontrolü ile
   static Future<void> toggleFavorite(String id) async {
     try {
-      final doc = await _firestore.collection(_collectionName).doc(id).get();
-      if (doc.exists) {
-        final currentFavorite = doc.data()?['isFavorite'] ?? false;
-        await _firestore.collection(_collectionName).doc(id).update({
-          'isFavorite': !currentFavorite,
-          'updatedAt': Timestamp.now(),
-        });
-        print('✅ Favori durumu değiştirildi: $id');
+      final userId = _currentUserId;
+      if (userId == null) {
+        throw Exception('Kullanıcı giriş yapmamış');
       }
+
+      final doc = await _firestore.collection(_collectionName).doc(id).get();
+      if (!doc.exists || doc.data()?['userId'] != userId) {
+        throw Exception('Bu ilham sözünü favorilere ekleme yetkiniz yok');
+      }
+
+      final currentFavorite = doc.data()?['isFavorite'] ?? false;
+      await _firestore.collection(_collectionName).doc(id).update({
+        'isFavorite': !currentFavorite,
+        'updatedAt': Timestamp.now(),
+      });
+      print('✅ Favori durumu değiştirildi: $id');
     } catch (e) {
       print('❌ Favori hatası: $e');
       rethrow;

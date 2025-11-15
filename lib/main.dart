@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
@@ -12,6 +11,9 @@ import 'providers/inspiration_provider.dart';
 import 'models/inspiration_entry.dart';
 import 'services/meditation_service.dart';
 import 'models/meditation_entry.dart';
+import 'providers/auth_provider.dart';
+import 'screens/login_screen.dart';
+import 'screens/mood_history_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,11 +27,13 @@ void main() async {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authStateProvider);
+
     return MaterialApp(
       title: 'MyDearDiary',
       debugShowCheckedModeBanner: false,
@@ -67,7 +71,22 @@ class MyApp extends StatelessWidget {
           ),
         ),
       ),
-      home: const InspirationScreen(),
+      home: authState.when(
+        data: (user) {
+          // Kullanıcı giriş yapmışsa ana sayfayı göster
+          if (user != null) {
+            return const InspirationScreen();
+          }
+          // Kullanıcı giriş yapmamışsa login sayfasını göster
+          return const LoginScreen();
+        },
+        loading: () => const Scaffold(
+          body: Center(
+            child: CircularProgressIndicator(),
+          ),
+        ),
+        error: (error, stack) => const LoginScreen(),
+      ),
     );
   }
 }
@@ -222,7 +241,11 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
           selectedMood: _selectedMood,
           prompt1Controller: _prompt1Controller,
           prompt2Controller: _prompt2Controller,
-          onSave: () => _saveMood(context),
+          onSave: () async => await _saveMood(context),
+          onMoodSaved: () {
+            // Kayıt yapıldıktan sonra mood content'i yenile
+            setState(() {});
+          },
         ); // Ruh Hali
       case 2:
         return _buildMeditationContent(
@@ -248,53 +271,326 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
     return _AnimatedMeditationContent(key: key);
   }
 
-  /// ✅ Profile Content - Diğer sayfalarla aynı stil
+  /// ✅ Profile Content - Modern ve güzel tasarım
   Widget _buildProfileContent(BuildContext context, {Key? key}) {
     // Alt navigasyon çubuğu için padding hesapla
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final navBarHeight = 70.0;
+    final currentUser = ref.watch(currentUserProvider);
+    final safeAreaTop = MediaQuery.of(context).padding.top;
     
     return SingleChildScrollView(
       key: key,
       padding: EdgeInsets.fromLTRB(
         20,
-        70, // Üst boşluk - Diğer sayfalarla aynı
+        0, // Padding yok - başlık en üstte
         20,
         bottomPadding + navBarHeight + 20,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ✅ Başlık - Diğer sayfalarla aynı stil
-          Row(
-            children: [
-              Icon(
-                Icons.person_outline,
-                color: Colors.grey.shade400,
-                size: 24,
-              ),
-              const SizedBox(width: 8),
+          // ✅ Başlık - En yukarıda (minimum padding)
+          Transform.translate(
+            offset: Offset(0, -(safeAreaTop * 0.8)), // Status bar'ın %80'i kadar yukarı taşı
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(0, safeAreaTop * 0.2, 0, 0), // Status bar'ın %20'si kadar padding
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                    child: Icon(
+                      Icons.person_outline,
+                      color: Colors.grey.shade800,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
           Text(
                 'Profil',
             style: TextStyle(
-                  fontSize: 28,
+                          fontSize: 32,
               fontWeight: FontWeight.bold,
-              color: Colors.grey.shade800,
+                          color: Colors.grey.shade900,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        'Hesap bilgileriniz ve ayarlar',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Colors.grey.shade500,
+                          fontWeight: FontWeight.w400,
             ),
           ),
             ],
           ),
-          const SizedBox(height: 60),
-          Center(
-      child: Text(
-              'Çok Yakında',
-        style: TextStyle(
-          fontSize: 16,
-          color: Colors.grey.shade400,
-        ),
-      ),
+                ),
+              ],
+            ),
+            ),
           ),
-        ],
+          const SizedBox(height: 24),
+          
+          // ✅ Profil Avatar ve Bilgiler - Minimalist kart
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: Colors.grey.shade200,
+                width: 1,
+              ),
+            ),
+            padding: const EdgeInsets.all(24),
+              child: Row(
+                children: [
+                // Minimalist avatar
+                  Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.grey.shade100,
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.grey.shade200,
+                        width: 2,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.person,
+                      size: 42,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                const SizedBox(width: 20),
+                  Expanded(
+            child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                        'Hoş Geldiniz',
+                          style: TextStyle(
+                          fontSize: 13,
+                            color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      const SizedBox(height: 8),
+        Text(
+                          currentUser?.email ?? 'Yükleniyor...',
+          style: TextStyle(
+            fontSize: 16,
+                          color: Colors.grey.shade900,
+                            fontWeight: FontWeight.w600,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          
+          const SizedBox(height: 20),
+          
+          // ✅ Geçmiş Kayıtlar Butonu - Minimalist kart
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Colors.grey.shade200,
+                width: 1,
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const MoodHistoryScreen(),
+                    ),
+                  );
+                },
+                borderRadius: BorderRadius.circular(18),
+                child: Container(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 56,
+                        height: 56,
+                        decoration: BoxDecoration(
+                          color: Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.grey.shade200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Icon(
+                          Icons.history_rounded,
+                          color: Colors.grey.shade800,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Geçmiş Kayıtlar',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade900,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Son 4 haftalık ruh hali kayıtlarını görüntüle',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios,
+                        size: 16,
+                        color: Colors.grey.shade400,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // ✅ Çıkış yap butonu - Minimalist stil
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(
+                color: Colors.grey.shade200,
+                width: 1,
+              ),
+            ),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                // Onay dialogu göster
+                final shouldLogout = await showDialog<bool>(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Çıkış Yap'),
+                    content: const Text('Çıkış yapmak istediğinize emin misiniz?'),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(false),
+                        child: Text(
+                          'İptal',
+                            style: TextStyle(
+                              color: Colors.grey.shade600,
+                              fontWeight: FontWeight.w500,
+                            ),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () => Navigator.of(context).pop(true),
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.red.shade600,
+                          foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                        ),
+                        child: const Text('Çıkış Yap'),
+                      ),
+                    ],
+                  ),
+                );
+
+                if (shouldLogout == true) {
+                  try {
+                    final authService = ref.read(authServiceProvider);
+                    await authService.signOut();
+                    // Auth state değiştiği için otomatik olarak login sayfasına yönlendirilecek
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text('Çıkış yapılırken bir hata oluştu: $e'),
+                          backgroundColor: Colors.red,
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                        ),
+                      );
+                    }
+                  }
+                }
+              },
+                borderRadius: BorderRadius.circular(18),
+                child: Container(
+                  padding: const EdgeInsets.all(20.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.red.shade50,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.logout_rounded,
+                          size: 20,
+                          color: Colors.red.shade600,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                    'Çıkış Yap',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+                          color: Colors.red.shade600,
+                    ),
+                  ),
+                ],
+                  ),
+                ),
+              ),
+          ),
+        ),
+      ],
       ),
     );
   }
@@ -711,6 +1007,7 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
     // Alt navigasyon çubuğu için padding hesapla
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     final navBarHeight = 70.0;
+    final safeAreaTop = MediaQuery.of(context).padding.top;
     
     if (widget.inspirations.isEmpty) {
       return Column(
@@ -719,7 +1016,7 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
         children: [
           // ✅ Başlık - En üstte
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+            padding: EdgeInsets.fromLTRB(20, safeAreaTop + 16, 20, 0),
             child: Row(
               children: [
                 Icon(
@@ -812,7 +1109,7 @@ class _InspirationScreenState extends ConsumerState<_InspirationScreenContent> {
         children: [
         // ✅ Başlık - En üstte (diğer sayfalarla aynı)
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 70, 20, 0),
+          padding: EdgeInsets.fromLTRB(20, safeAreaTop + 16, 20, 0),
           child: Row(
             children: [
               Icon(
@@ -1262,7 +1559,8 @@ class _AnimatedMoodContent extends StatefulWidget {
   final String? selectedMood;
   final TextEditingController prompt1Controller;
   final TextEditingController prompt2Controller;
-  final VoidCallback onSave;
+  final Future<void> Function() onSave;
+  final VoidCallback? onMoodSaved;
   final bool isActive;
 
   const _AnimatedMoodContent({
@@ -1271,6 +1569,7 @@ class _AnimatedMoodContent extends StatefulWidget {
     required this.prompt1Controller,
     required this.prompt2Controller,
     required this.onSave,
+    this.onMoodSaved,
     required this.isActive,
     super.key,
   });
@@ -1362,24 +1661,6 @@ class _AnimatedMoodContentState extends State<_AnimatedMoodContent>
     }
   }
 
-  String _getMonthName(int month) {
-    const months = [
-      'Oca',
-      'Şub',
-      'Mar',
-      'Nis',
-      'May',
-      'Haz',
-      'Tem',
-      'Ağu',
-      'Eyl',
-      'Eki',
-      'Kas',
-      'Ara',
-    ];
-    return months[month - 1];
-  }
-
   @override
   Widget build(BuildContext context) {
     // Alt navigasyon çubuğu için padding hesapla
@@ -1389,15 +1670,17 @@ class _AnimatedMoodContentState extends State<_AnimatedMoodContent>
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         20,
-        70, // Üst boşluk - Meditasyon sayfasıyla aynı
+        0, // Padding yok - başlık en üstte
         20,
         bottomPadding + navBarHeight + 20, // Alt navigasyon için boşluk
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ✅ Başlık - Meditasyon sayfasıyla aynı stil
-          Row(
+          // ✅ Başlık - Diğer sayfalarla aynı hizada (safeAreaTop + 16)
+          Padding(
+            padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 0, 0),
+            child: Row(
             children: [
               Icon(
                 Icons.favorite_outline,
@@ -1414,6 +1697,7 @@ class _AnimatedMoodContentState extends State<_AnimatedMoodContent>
                 ),
               ),
             ],
+            ),
           ),
           const SizedBox(height: 6),
           Text(
@@ -1431,10 +1715,10 @@ class _AnimatedMoodContentState extends State<_AnimatedMoodContent>
           _buildAnimatedJournalPrompts(context),
           const SizedBox(height: 30),
           // ✅ Save Button
-          _buildSaveButton(context),
-          const SizedBox(height: 30),
-          // ✅ Animasyonlu Past Records
-          _buildAnimatedPastRecords(context),
+          _buildSaveButton(context, () {
+            // Kayıt yapıldıktan sonra callback'i çağır
+            widget.onMoodSaved?.call();
+          }),
           const SizedBox(height: 20), // Alt navigasyon için minimal boşluk
         ],
       ),
@@ -1599,9 +1883,17 @@ class _AnimatedMoodContentState extends State<_AnimatedMoodContent>
     );
   }
 
-  Widget _buildSaveButton(BuildContext context) {
+  Widget _buildSaveButton(BuildContext context, VoidCallback? onSaved) {
     return GestureDetector(
-      onTap: widget.onSave,
+      onTap: () async {
+        // Kayıt işlemini başlat ve tamamlanmasını bekle
+        await widget.onSave();
+        // Firebase kayıt işleminin tamamlanması ve verinin yansıması için bekle
+        await Future.delayed(const Duration(milliseconds: 1500));
+        if (mounted) {
+          onSaved?.call();
+        }
+      },
       child: Container(
         width: double.infinity,
         height: 50,
@@ -1623,66 +1915,6 @@ class _AnimatedMoodContentState extends State<_AnimatedMoodContent>
     );
   }
 
-  /// ✅ Slide Animation Past Records
-  Widget _buildAnimatedPastRecords(BuildContext context) {
-    return FutureBuilder<List<MoodEntry>>(
-      future: MoodService.getAllMoods(),
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        if (snapshot.hasError) {
-          return Text('Hata: ${snapshot.error}');
-        }
-
-        final records = snapshot.data ?? [];
-        final recentRecords = records.take(5).toList();
-
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Geçmiş Kayıtlar',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.grey.shade800,
-              ),
-            ),
-            const SizedBox(height: 16),
-            if (recentRecords.isEmpty)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  'Henüz kayıt yok. İlk kaydınızı oluşturun!',
-                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
-                ),
-              )
-            else
-              ...recentRecords.asMap().entries.map(
-                    (entry) {
-                      final index = entry.key;
-                      final record = entry.value;
-                      // Her kart 0.05 saniye gecikmeli (daha kısa gecikme)
-                      final delay = 0.3 + (index * 0.05);
-                      return _SlideRecordCard(
-                        animationController: _controller,
-                        delay: delay,
-                        record: record,
-                        getMonthName: _getMonthName,
-                      );
-                    },
-                  ),
-          ],
-        );
-      },
-    );
-  }
 }
 
 /// ✅ Staggered Mood Card - Fade + Scale Animation
@@ -1815,103 +2047,6 @@ class _CascadeCard extends StatelessWidget {
   }
 }
 
-/// ✅ Slide Record Card - Slide + Fade Animation
-class _SlideRecordCard extends StatelessWidget {
-  final AnimationController animationController;
-  final double delay;
-  final MoodEntry record;
-  final String Function(int) getMonthName;
-
-  const _SlideRecordCard({
-    required this.animationController,
-    required this.delay,
-    required this.record,
-    required this.getMonthName,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    // Interval'ı doğru hesapla (0.0-1.0 arası, toplam animasyon süresi 1.5 saniye)
-    final totalDuration = 1.5;
-    final startTime = (delay / totalDuration).clamp(0.0, 1.0);
-    final endTime = ((delay + 0.3) / totalDuration).clamp(0.0, 1.0);
-
-    final fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: animationController,
-        curve: Interval(
-          startTime,
-          endTime,
-          curve: Curves.easeOut,
-        ),
-      ),
-    );
-
-    final slideAnimation = Tween<Offset>(
-      begin: const Offset(-0.2, 0.0), // Soldan gel
-      end: Offset.zero,
-    ).animate(
-      CurvedAnimation(
-        parent: animationController,
-        curve: Interval(
-          startTime,
-          endTime,
-          curve: Curves.easeOut,
-        ),
-      ),
-    );
-
-    return AnimatedBuilder(
-      animation: animationController,
-      builder: (context, _) {
-        final screenWidth = MediaQuery.of(context).size.width;
-        return Opacity(
-          opacity: fadeAnimation.value,
-          child: Transform.translate(
-            offset: Offset(
-              slideAnimation.value.dx * screenWidth,
-              0,
-            ),
-            child: Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Text(
-                    record.emoji,
-                    style: const TextStyle(fontSize: 24),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    record.mood,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    '${record.date.day} ${getMonthName(record.date.month)}',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
-}
-
 /// ✅ Animasyonlu Meditasyon Content
 class _AnimatedMeditationContent extends StatefulWidget {
   const _AnimatedMeditationContent({super.key});
@@ -1978,15 +2113,17 @@ class _AnimatedMeditationContentState
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(
         20,
-        70, // Üstten boşluk artırıldı
+        0, // Padding yok - başlık en üstte
         20,
         bottomPadding + navBarHeight + 20, // Alt navigasyon için yeterli boşluk
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ✅ Başlık
-          Row(
+          // ✅ Başlık - Diğer sayfalarla aynı hizada (safeAreaTop + 16)
+          Padding(
+            padding: EdgeInsets.fromLTRB(0, MediaQuery.of(context).padding.top + 16, 0, 0),
+            child: Row(
             children: [
               Icon(
                 Icons.nightlight_outlined,
@@ -2003,6 +2140,7 @@ class _AnimatedMeditationContentState
                 ),
               ),
             ],
+            ),
           ),
           const SizedBox(height: 6),
           Text(

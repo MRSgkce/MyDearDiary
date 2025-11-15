@@ -10,5 +10,8 @@ service cloud.firestore {
     match /inspirations/{document} {
       allow read, write: if true;
     }
+    match /meditation_entries/{document} {
+      allow read, write: if true;
+    }
   }
 }
